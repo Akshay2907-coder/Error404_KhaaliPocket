@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="WhatScenes, a neon social dashboard for planning hangouts, splitting expenses, voting on plans, and sharing group memories."
+    />
+    <title>WhatScenes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Epilogue:ital,wght@0,700;0,800;1,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css?v=5" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar" aria-label="Primary">
+        <button class="avatar-button" type="button" data-action="open-profile" aria-label="Open profile">
+          <img
+            src="https://api.dicebear.com/9.x/notionists-neutral/svg?seed=Nova&backgroundColor=bd00ff,00e0ff"
+            alt="Nova avatar"
+          />
+        </button>
+
+        <button class="brand-button" type="button" data-route="home" aria-label="Go home">
+          <span class="brand-mark">C</span>
+          <span>WhatScenes</span>
+        </button>
+
+        <nav class="desktop-nav" aria-label="Desktop navigation"></nav>
+
+        <div class="datetime-pill" data-current-datetime aria-live="polite">
+          <span class="material-symbols-outlined">schedule</span>
+          <span>Loading time</span>
+        </div>
+
+        <button class="icon-button notification-button" type="button" data-action="toggle-notifications" aria-label="Notifications">
+          <span class="material-symbols-outlined">notifications</span>
+          <span class="notification-dot" aria-hidden="true"></span>
+        </button>
+      </header>
+
+      <aside class="notification-panel" aria-live="polite" aria-label="Notifications"></aside>
+
+      <main id="app" class="view-shell" tabindex="-1">
+        <section class="skeleton-screen" aria-label="Loading WhatScenes">
+          <div class="skeleton skeleton-title"></div>
+          <div class="skeleton-grid">
+            <div class="skeleton skeleton-card"></div>
+            <div class="skeleton skeleton-card"></div>
+            <div class="skeleton skeleton-card"></div>
+          </div>
+        </section>
+      </main>
+
+      <nav class="mobile-nav" aria-label="Mobile navigation"></nav>
+    </div>
+
+    <div class="modal-backdrop" data-modal hidden>
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow" id="modal-kicker">New</p>
+            <h2 id="modal-title">Add item</h2>
+          </div>
+          <button class="icon-button" type="button" data-action="close-modal" aria-label="Close modal">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <div id="modal-body"></div>
+      </section>
+    </div>
+
+    <div class="toast-stack" aria-live="polite" aria-atomic="true"></div>
+
+    <template id="empty-state-template">
+      <div class="empty-state">
+        <span class="material-symbols-outlined">auto_awesome</span>
+        <h3></h3>
+        <p></p>
+      </div>
+    </template>
+
+    <script src="app.js?v=5"></script>
+  </body>
+</html>
