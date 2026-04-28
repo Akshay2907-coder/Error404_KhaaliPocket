@@ -20,3 +20,22 @@ Core Frontend Features Implemented:
   Dark/Light mode toggle
   Smooth transitions and animations
   Clean modern design system
+10.Server Setup
+  Express server initialized
+  Middleware (CORS, JSON parsing)
+  Environment config using dotenv
+11.API Endpoints
+  `GET /` → Test route
+  POST /expenses` → Add expense
+  `GET /expenses` → Fetch all expenses
+  `POST /budget` → Set daily budget
+  `GET /budget` → Get current budget
+12. Data Handling
+  Temporary in-memory storage
+  Expense structure defined
+  Budget tracking logic
+13.AI Features (In Progress / Planned)
+  Smart spending insights
+  Daily budget prediction
+  Overspending alerts with suggestions
+  Categorization using AI
