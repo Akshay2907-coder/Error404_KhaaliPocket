@@ -1,94 +1,387 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="WhatScenes, a neon social dashboard for planning hangouts, splitting expenses, voting on plans, and sharing group memories."
-    />
-    <title>WhatScenes</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Epilogue:ital,wght@0,700;0,800;1,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="styles.css?v=5" />
-  </head>
-  <body>
-    <div class="app-shell">
-      <header class="topbar" aria-label="Primary">
-        <button class="avatar-button" type="button" data-action="open-profile" aria-label="Open profile">
-          <img
-            src="https://api.dicebear.com/9.x/notionists-neutral/svg?seed=Nova&backgroundColor=bd00ff,00e0ff"
-            alt="Nova avatar"
-          />
-        </button>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f5fafc">
+  <title>KhaaliPocket</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#app-main">Skip to content</a>
 
-        <button class="brand-button" type="button" data-route="home" aria-label="Go home">
-          <span class="brand-mark">C</span>
-          <span>WhatScenes</span>
-        </button>
+  <header class="top-app-bar">
+    <div class="brand">
+      <button class="brand-icon icon-button" type="button" data-action="go-home" aria-label="Go to dashboard">
+        <span class="material-symbols-outlined" aria-hidden="true">account_balance_wallet</span>
+      </button>
+      <span class="brand-name">KhaaliPocket</span>
+    </div>
 
-        <nav class="desktop-nav" aria-label="Desktop navigation"></nav>
+    <nav class="desktop-nav" aria-label="Primary">
+      <button class="nav-pill" type="button" data-nav="home">
+        <span class="material-symbols-outlined" aria-hidden="true">home</span>
+        <span>Home</span>
+      </button>
+      <button class="nav-pill" type="button" data-nav="budget">
+        <span class="material-symbols-outlined" aria-hidden="true">account_balance</span>
+        <span>Budget</span>
+      </button>
+      <button class="nav-pill" type="button" data-nav="add">
+        <span class="material-symbols-outlined" aria-hidden="true">add_circle</span>
+        <span>Add</span>
+      </button>
+      <button class="nav-pill" type="button" data-nav="ai">
+        <span class="material-symbols-outlined" aria-hidden="true">smart_toy</span>
+        <span>AI</span>
+      </button>
+      <button class="nav-pill" type="button" data-nav="food">
+        <span class="material-symbols-outlined" aria-hidden="true">restaurant</span>
+        <span>Food</span>
+      </button>
+    </nav>
 
-        <div class="datetime-pill" data-current-datetime aria-live="polite">
-          <span class="material-symbols-outlined">schedule</span>
-          <span>Loading time</span>
+    <div class="top-actions">
+      <button class="theme-toggle" type="button" id="theme-toggle" aria-label="Switch to dark mode" aria-pressed="false">
+        <span class="material-symbols-outlined theme-toggle-icon" aria-hidden="true">dark_mode</span>
+        <span class="theme-toggle-text">Dark</span>
+      </button>
+      <button class="profile-button" type="button" data-action="profile" aria-label="Open profile summary">
+        <span class="profile-initials" aria-hidden="true">UP</span>
+        <span class="material-symbols-outlined profile-fallback" aria-hidden="true">person</span>
+      </button>
+    </div>
+  </header>
+
+  <main id="app-main" class="app-shell" tabindex="-1">
+    <section class="page dashboard-page" data-page="home" aria-labelledby="dashboard-title">
+      <div class="dashboard-grid">
+        <div class="primary-column">
+          <article class="alert-card">
+            <span class="material-symbols-outlined" aria-hidden="true">error</span>
+            <div>
+              <h2>Warning: Over budget for today.</h2>
+              <p>Try adjusting your remaining meals.</p>
+            </div>
+          </article>
+
+          <article class="smart-message card">
+            <div class="circle-icon">
+              <span class="material-symbols-outlined" aria-hidden="true">smart_toy</span>
+            </div>
+            <p>"You can spend <strong id="meal-budget-text">₹120</strong> per meal today"</p>
+          </article>
+
+          <article class="balance-card card">
+            <div class="balance-glow" aria-hidden="true"></div>
+            <div class="balance-head">
+              <div>
+                <span class="eyebrow">Remaining Monthly Balance</span>
+                <div class="balance-values">
+                  <h1 id="dashboard-title">₹14,500</h1>
+                  <span id="income-total-label">/ ₹20,000</span>
+                </div>
+              </div>
+              <span class="usage-chip" id="usage-chip">72% Used</span>
+            </div>
+            <div class="progress-track" aria-label="Monthly budget used">
+              <div class="progress-fill" id="monthly-progress"></div>
+            </div>
+          </article>
         </div>
 
-        <button class="icon-button notification-button" type="button" data-action="toggle-notifications" aria-label="Notifications">
-          <span class="material-symbols-outlined">notifications</span>
-          <span class="notification-dot" aria-hidden="true"></span>
-        </button>
-      </header>
+        <div class="secondary-column">
+          <article class="metric-card card">
+            <div class="metric-title">
+              <span class="material-symbols-outlined" aria-hidden="true">today</span>
+              <h2>Daily Spend Limit</h2>
+            </div>
+            <div class="metric-value-row">
+              <strong id="daily-limit-text">₹450</strong>
+              <button class="round-action" type="button" data-edit-limit="daily" aria-label="Edit daily spend limit">
+                <span class="material-symbols-outlined" aria-hidden="true">edit</span>
+              </button>
+            </div>
+          </article>
 
-      <aside class="notification-panel" aria-live="polite" aria-label="Notifications"></aside>
+          <article class="metric-card card">
+            <div class="metric-title">
+              <span class="material-symbols-outlined" aria-hidden="true">restaurant</span>
+              <h2>Per Meal Budget</h2>
+            </div>
+            <div class="metric-value-row">
+              <strong id="per-meal-text">₹120</strong>
+              <button class="round-action" type="button" data-edit-limit="meal" aria-label="Edit per meal budget">
+                <span class="material-symbols-outlined" aria-hidden="true">edit</span>
+              </button>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
 
-      <main id="app" class="view-shell" tabindex="-1">
-        <section class="skeleton-screen" aria-label="Loading WhatScenes">
-          <div class="skeleton skeleton-title"></div>
-          <div class="skeleton-grid">
-            <div class="skeleton skeleton-card"></div>
-            <div class="skeleton skeleton-card"></div>
-            <div class="skeleton skeleton-card"></div>
+    <section class="page budget-page" data-page="budget" aria-labelledby="budget-title">
+      <div class="section-header budget-header">
+        <h1 id="budget-title">Budget Setup</h1>
+        <p>Define your monthly limits to maintain a precise financial architecture.</p>
+      </div>
+
+      <div class="budget-grid">
+        <aside class="budget-left">
+          <article class="card form-card">
+            <label class="eyebrow" for="income-input">Monthly Income</label>
+            <div class="currency-input">
+              <span aria-hidden="true">₹</span>
+              <input id="income-input" inputmode="numeric" type="text" autocomplete="off" value="4500">
+            </div>
+            <p class="field-error" id="income-error" aria-live="polite"></p>
+          </article>
+
+          <article class="card auto-card">
+            <div class="auto-title">
+              <span class="material-symbols-outlined filled" aria-hidden="true">auto_awesome</span>
+              <h2>Auto-Divide</h2>
+            </div>
+            <p>Distribute income based on smart algorithmic recommendations.</p>
+            <button class="outline-button" type="button" id="auto-divide">
+              <span class="material-symbols-outlined" aria-hidden="true">calculate</span>
+              Apply Smart Split
+            </button>
+          </article>
+
+          <article class="card summary-card">
+            <div>
+              <span>Allocated</span>
+              <strong id="allocated-label">₹2,500</strong>
+            </div>
+            <div>
+              <span>Remaining</span>
+              <strong id="remaining-label">₹2,000</strong>
+            </div>
+            <div class="progress-track slim" aria-label="Allocated income">
+              <div class="progress-fill" id="allocation-progress"></div>
+            </div>
+          </article>
+        </aside>
+
+        <div class="budget-right">
+          <article class="card allocation-card">
+            <div class="card-header">
+              <h2>Category Allocation</h2>
+              <span class="eyebrow" id="active-category-count">3 Active</span>
+            </div>
+            <div id="category-list" class="category-list"></div>
+            <button class="dashed-button" type="button" id="add-category-button">
+              <span class="material-symbols-outlined" aria-hidden="true">add</span>
+              Add Custom Category
+            </button>
+          </article>
+
+          <div class="budget-actions">
+            <button class="primary-button save-budget" type="button" id="save-budget">
+              Save Budget Structure
+              <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page add-page" data-page="add" aria-labelledby="add-title">
+      <div class="add-shell">
+        <div class="section-header">
+          <h1 id="add-title">New Expense</h1>
+          <p>Log your recent transaction.</p>
+        </div>
+
+        <form id="expense-form" class="expense-form" novalidate>
+          <div class="amount-card">
+            <label class="eyebrow" for="amount-input">Amount</label>
+            <div class="hero-input">
+              <span aria-hidden="true">₹</span>
+              <input id="amount-input" type="number" inputmode="decimal" min="1" step="0.01" placeholder="0.00" autocomplete="off">
+            </div>
+            <p class="field-error" id="amount-error" aria-live="polite"></p>
+          </div>
+
+          <fieldset class="category-selector">
+            <legend class="eyebrow">Category</legend>
+            <div class="category-options">
+              <label>
+                <input type="radio" name="expense-category" value="food" checked>
+                <span>
+                  <span class="material-symbols-outlined" aria-hidden="true">restaurant</span>
+                  Food
+                </span>
+              </label>
+              <label>
+                <input type="radio" name="expense-category" value="transport">
+                <span>
+                  <span class="material-symbols-outlined" aria-hidden="true">directions_car</span>
+                  Transport
+                </span>
+              </label>
+              <label>
+                <input type="radio" name="expense-category" value="shopping">
+                <span>
+                  <span class="material-symbols-outlined" aria-hidden="true">shopping_bag</span>
+                  Shopping
+                </span>
+              </label>
+              <label>
+                <input type="radio" name="expense-category" value="other">
+                <span>
+                  <span class="material-symbols-outlined" aria-hidden="true">more_horiz</span>
+                  Other
+                </span>
+              </label>
+            </div>
+          </fieldset>
+
+          <div class="note-field">
+            <label class="eyebrow" for="note-input">Note (Optional)</label>
+            <div class="text-input">
+              <span class="material-symbols-outlined" aria-hidden="true">edit_note</span>
+              <input id="note-input" type="text" maxlength="80" placeholder="What was this for?" autocomplete="off">
+            </div>
+          </div>
+
+          <button class="primary-button submit-expense" type="submit">
+            <span class="material-symbols-outlined" aria-hidden="true">add_task</span>
+            Add Expense
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <section class="page ai-page" data-page="ai" aria-labelledby="ai-title">
+      <div class="section-header ai-header">
+        <h1 id="ai-title">AI Insights</h1>
+        <p>Your automated financial intelligence report.</p>
+      </div>
+
+      <div class="insights-grid">
+        <article class="card burn-card">
+          <div class="burn-pattern" aria-hidden="true"></div>
+          <div class="burn-content">
+            <div class="burn-copy">
+              <div class="burn-title">
+                <div class="circle-icon">
+                  <span class="material-symbols-outlined" aria-hidden="true">monitoring</span>
+                </div>
+                <h2>Burn Rate</h2>
+              </div>
+              <h3 id="burn-heading">Looking good.</h3>
+              <p id="burn-summary">You are spending <strong>12% less</strong> than last week. Keep up the disciplined pacing.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="card breakdown-card">
+          <div class="card-header">
+            <h2>Spending Breakdown</h2>
+            <span class="material-symbols-outlined" aria-hidden="true">pie_chart</span>
+          </div>
+          <div class="donut" id="spending-donut" role="img" aria-label="Spending breakdown chart">
+            <div>
+              <strong>30 Days</strong>
+              <span>Trailing</span>
+            </div>
+          </div>
+          <div id="breakdown-list" class="breakdown-list"></div>
+        </article>
+
+        <article class="card tips-card">
+          <div class="card-header tips-header">
+            <div>
+              <span class="material-symbols-outlined" aria-hidden="true">lightbulb</span>
+              <h2>Smart Savings Tips</h2>
+            </div>
+            <span class="small-chip">Actionable</span>
+          </div>
+          <div class="tip-list" id="tip-list"></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="page food-page" data-page="food" aria-labelledby="food-title">
+      <div class="food-shell">
+        <div class="food-heading">
+          <div>
+            <h1 id="food-title">Nearby Bites</h1>
+            <p>Discover affordable meals around you.</p>
+          </div>
+          <div class="scan-chip" aria-live="polite">
+            <span class="pulse-dot" aria-hidden="true"></span>
+            <span id="scan-location">Scanning: Koramangala</span>
+          </div>
+        </div>
+
+        <section class="food-hero" aria-label="Budget radar">
+          <div class="hero-gradient" aria-hidden="true"></div>
+          <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCw3ClSkvnNq56CzEzwS5at61zc30dg_ZG6YQRtNJBkbecO0BTuP4zzbpqVkUONIAFAfUz4BghxLgqwonbLGmYTJTO6STTiYrbDOhEnqh2wqP5xQ6iYAZlTAjjGG-OIQpkOiLnXXLGhtc5fMXVMIn_Y8HkfW9o57JkC7tmDtivXAKt_JgA7G8Q7-k8FlPTYTepC2RuDvYvXyNomy81ToPJTsDKaWj1i8KMEaDydYqrDTzvz0rQds5XrMnATw2QGU2PX6zv2fJMdOgM" alt="Dimly lit restaurant scene with blurred lights and culinary elements">
+          <div class="food-hero-content">
+            <span>Budget Radar Active</span>
+            <h2>Find meals under <br><strong>₹150</strong></h2>
+            <button class="light-button" type="button" id="explore-offers">
+              <span>Explore Offers</span>
+              <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+            </button>
           </div>
         </section>
-      </main>
 
-      <nav class="mobile-nav" aria-label="Mobile navigation"></nav>
-    </div>
-
-    <div class="modal-backdrop" data-modal hidden>
-      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-        <div class="modal-header">
-          <div>
-            <p class="eyebrow" id="modal-kicker">New</p>
-            <h2 id="modal-title">Add item</h2>
-          </div>
-          <button class="icon-button" type="button" data-action="close-modal" aria-label="Close modal">
-            <span class="material-symbols-outlined">close</span>
+        <div class="filter-row" role="toolbar" aria-label="Restaurant filters">
+          <button class="filter-chip active" type="button" data-filter="nearest">
+            <span class="material-symbols-outlined" aria-hidden="true">tune</span>
+            Nearest
           </button>
+          <button class="filter-chip" type="button" data-filter="veg">Pure Veg</button>
+          <button class="filter-chip" type="button" data-filter="street">Street Food</button>
+          <button class="filter-chip" type="button" data-filter="open">Open Now</button>
         </div>
-        <div id="modal-body"></div>
-      </section>
-    </div>
 
-    <div class="toast-stack" aria-live="polite" aria-atomic="true"></div>
-
-    <template id="empty-state-template">
-      <div class="empty-state">
-        <span class="material-symbols-outlined">auto_awesome</span>
-        <h3></h3>
-        <p></p>
+        <div class="restaurant-grid" id="restaurant-grid"></div>
       </div>
-    </template>
+    </section>
+  </main>
 
-    <script src="app.js?v=5"></script>
-  </body>
+  <nav class="bottom-nav" aria-label="Primary mobile">
+    <button class="bottom-nav-item" type="button" data-nav="home">
+      <span class="material-symbols-outlined" aria-hidden="true">home</span>
+      <span>Home</span>
+    </button>
+    <button class="bottom-nav-item" type="button" data-nav="budget">
+      <span class="material-symbols-outlined" aria-hidden="true">account_balance</span>
+      <span>Budget</span>
+    </button>
+    <button class="bottom-nav-item add-tab" type="button" data-nav="add">
+      <span class="material-symbols-outlined" aria-hidden="true">add_circle</span>
+      <span>Add</span>
+    </button>
+    <button class="bottom-nav-item" type="button" data-nav="ai">
+      <span class="material-symbols-outlined" aria-hidden="true">smart_toy</span>
+      <span>AI</span>
+    </button>
+    <button class="bottom-nav-item" type="button" data-nav="food">
+      <span class="material-symbols-outlined" aria-hidden="true">restaurant</span>
+      <span>Food</span>
+    </button>
+  </nav>
+
+  <div class="toast-stack" id="toast-stack" aria-live="polite" aria-atomic="true"></div>
+
+  <dialog class="app-dialog" id="app-dialog">
+    <form method="dialog" class="dialog-card">
+      <button class="dialog-close icon-button" type="submit" value="cancel" aria-label="Close">
+        <span class="material-symbols-outlined" aria-hidden="true">close</span>
+      </button>
+      <div id="dialog-body"></div>
+    </form>
+  </dialog>
+  <script src="script.js"></script>
+</body>
 </html>
