@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,10 +8,13 @@
   <title>KhaaliPocket</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
 </head>
+
 <body>
   <a class="skip-link" href="#app-main">Skip to content</a>
 
@@ -39,6 +43,10 @@
         <span class="material-symbols-outlined" aria-hidden="true">smart_toy</span>
         <span>AI</span>
       </button>
+      <button class="nav-pill" type="button" data-nav="history">
+        <span class="material-symbols-outlined" aria-hidden="true">history</span>
+        <span>History</span>
+      </button>
       <button class="nav-pill" type="button" data-nav="food">
         <span class="material-symbols-outlined" aria-hidden="true">restaurant</span>
         <span>Food</span>
@@ -46,7 +54,8 @@
     </nav>
 
     <div class="top-actions">
-      <button class="theme-toggle" type="button" id="theme-toggle" aria-label="Switch to dark mode" aria-pressed="false">
+      <button class="theme-toggle" type="button" id="theme-toggle" aria-label="Switch to dark mode"
+        aria-pressed="false">
         <span class="material-symbols-outlined theme-toggle-icon" aria-hidden="true">dark_mode</span>
         <span class="theme-toggle-text">Dark</span>
       </button>
@@ -58,10 +67,40 @@
   </header>
 
   <main id="app-main" class="app-shell" tabindex="-1">
+    <section class="page welcome-page" data-page="welcome" aria-labelledby="welcome-title">
+      <div class="section-header">
+        <h1 id="welcome-title">Welcome to KhaaliPocket</h1>
+        <p>Start fresh by entering your monthly budget and how much you've already spent this month.</p>
+      </div>
+
+      <div class="welcome-card card">
+        <form id="welcome-form" class="welcome-form" novalidate>
+          <div class="form-row">
+            <label class="eyebrow" for="welcome-income">Monthly Budget</label>
+            <div class="currency-input">
+              <span aria-hidden="true">₹</span>
+              <input id="welcome-income" inputmode="numeric" type="text" placeholder="0" autocomplete="off">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label class="eyebrow" for="welcome-spent">Already spent this month</label>
+            <div class="currency-input">
+              <span aria-hidden="true">₹</span>
+              <input id="welcome-spent" inputmode="numeric" type="text" placeholder="0" autocomplete="off">
+            </div>
+          </div>
+
+          <p class="field-error" id="welcome-error" aria-live="polite"></p>
+          <button class="primary-button" type="submit">Save and continue</button>
+        </form>
+      </div>
+    </section>
+
     <section class="page dashboard-page" data-page="home" aria-labelledby="dashboard-title">
       <div class="dashboard-grid">
         <div class="primary-column">
-          <article class="alert-card">
+          <article id="daily-alert" class="alert-card">
             <span class="material-symbols-outlined" aria-hidden="true">error</span>
             <div>
               <h2>Warning: Over budget for today.</h2>
@@ -203,43 +242,15 @@
             <label class="eyebrow" for="amount-input">Amount</label>
             <div class="hero-input">
               <span aria-hidden="true">₹</span>
-              <input id="amount-input" type="number" inputmode="decimal" min="1" step="0.01" placeholder="0.00" autocomplete="off">
+              <input id="amount-input" type="number" inputmode="decimal" min="1" step="0.01" placeholder="0.00"
+                autocomplete="off">
             </div>
             <p class="field-error" id="amount-error" aria-live="polite"></p>
           </div>
 
           <fieldset class="category-selector">
             <legend class="eyebrow">Category</legend>
-            <div class="category-options">
-              <label>
-                <input type="radio" name="expense-category" value="food" checked>
-                <span>
-                  <span class="material-symbols-outlined" aria-hidden="true">restaurant</span>
-                  Food
-                </span>
-              </label>
-              <label>
-                <input type="radio" name="expense-category" value="transport">
-                <span>
-                  <span class="material-symbols-outlined" aria-hidden="true">directions_car</span>
-                  Transport
-                </span>
-              </label>
-              <label>
-                <input type="radio" name="expense-category" value="shopping">
-                <span>
-                  <span class="material-symbols-outlined" aria-hidden="true">shopping_bag</span>
-                  Shopping
-                </span>
-              </label>
-              <label>
-                <input type="radio" name="expense-category" value="other">
-                <span>
-                  <span class="material-symbols-outlined" aria-hidden="true">more_horiz</span>
-                  Other
-                </span>
-              </label>
-            </div>
+            <div id="expense-category-options" class="category-options"></div>
           </fieldset>
 
           <div class="note-field">
@@ -262,6 +273,29 @@
       <div class="section-header ai-header">
         <h1 id="ai-title">AI Insights</h1>
         <p>Your automated financial intelligence report.</p>
+        <button id="get-ai-insight-btn" class="primary-button" style="margin-top: 16px;">
+          <span class="material-symbols-outlined" aria-hidden="true">auto_awesome</span>
+          Get AI Insight
+        </button>
+      </div>
+
+      <div id="ai-insight-result" style="display: none; margin-bottom: 24px;">
+        <article class="card">
+          <div class="card-header">
+            <h2>Backend AI Analysis</h2>
+            <span class="material-symbols-outlined" aria-hidden="true">memory</span>
+          </div>
+          <div style="margin-top: 16px;">
+            <p style="font-size: 1.2rem; margin-bottom: 8px;">Total Spending: <strong id="ai-total-spending"
+                style="color: var(--primary);">₹0</strong></p>
+            <div class="smart-message" style="margin-top: 12px;">
+              <div class="circle-icon">
+                <span class="material-symbols-outlined" aria-hidden="true">tips_and_updates</span>
+              </div>
+              <p id="ai-smart-message">"AI Message will appear here"</p>
+            </div>
+          </div>
+        </article>
       </div>
 
       <div class="insights-grid">
@@ -276,7 +310,8 @@
                 <h2>Burn Rate</h2>
               </div>
               <h3 id="burn-heading">Looking good.</h3>
-              <p id="burn-summary">You are spending <strong>12% less</strong> than last week. Keep up the disciplined pacing.</p>
+              <p id="burn-summary">You are spending <strong>12% less</strong> than last week. Keep up the disciplined
+                pacing.</p>
             </div>
           </div>
         </article>
@@ -295,6 +330,15 @@
           <div id="breakdown-list" class="breakdown-list"></div>
         </article>
 
+        <article class="card monthly-chart-card">
+          <div class="card-header">
+            <h2>Monthly Analysis</h2>
+            <span class="material-symbols-outlined" aria-hidden="true">bar_chart</span>
+          </div>
+          <div id="monthly-chart" class="monthly-chart" aria-label="Daily spending bar chart"></div>
+          <div id="monthly-chart-legend" class="monthly-chart-legend"></div>
+        </article>
+
         <article class="card tips-card">
           <div class="card-header tips-header">
             <div>
@@ -304,6 +348,53 @@
             <span class="small-chip">Actionable</span>
           </div>
           <div class="tip-list" id="tip-list"></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="page history-page" data-page="history" aria-labelledby="history-title">
+      <div class="section-header history-header">
+        <h1 id="history-title">Spending History</h1>
+        <p>Review your income and expense activity in one place.</p>
+      </div>
+
+      <div class="history-grid">
+        <article class="card history-summary-card">
+          <div class="card-header">
+            <h2>Income & Expenses</h2>
+            <span class="eyebrow">Overview</span>
+          </div>
+          <div class="history-summary-list">
+            <div class="expense-row">
+              <div>
+                <strong>Monthly Income</strong>
+                <span>Budget income from the budget tab</span>
+              </div>
+              <strong id="history-income">₹0</strong>
+            </div>
+            <div class="expense-row">
+              <div>
+                <strong>Total Spent</strong>
+                <span>All logged expenses</span>
+              </div>
+              <strong id="history-spent">₹0</strong>
+            </div>
+            <div class="expense-row">
+              <div>
+                <strong>Remaining</strong>
+                <span>Income minus expenses</span>
+              </div>
+              <strong id="history-remaining">₹0</strong>
+            </div>
+          </div>
+        </article>
+
+        <article class="card history-list-card">
+          <div class="card-header">
+            <h2>Expense History</h2>
+            <span class="eyebrow">Latest entries</span>
+          </div>
+          <div id="history-list" class="history-list"></div>
         </article>
       </div>
     </section>
@@ -323,7 +414,9 @@
 
         <section class="food-hero" aria-label="Budget radar">
           <div class="hero-gradient" aria-hidden="true"></div>
-          <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCw3ClSkvnNq56CzEzwS5at61zc30dg_ZG6YQRtNJBkbecO0BTuP4zzbpqVkUONIAFAfUz4BghxLgqwonbLGmYTJTO6STTiYrbDOhEnqh2wqP5xQ6iYAZlTAjjGG-OIQpkOiLnXXLGhtc5fMXVMIn_Y8HkfW9o57JkC7tmDtivXAKt_JgA7G8Q7-k8FlPTYTepC2RuDvYvXyNomy81ToPJTsDKaWj1i8KMEaDydYqrDTzvz0rQds5XrMnATw2QGU2PX6zv2fJMdOgM" alt="Dimly lit restaurant scene with blurred lights and culinary elements">
+          <img
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCw3ClSkvnNq56CzEzwS5at61zc30dg_ZG6YQRtNJBkbecO0BTuP4zzbpqVkUONIAFAfUz4BghxLgqwonbLGmYTJTO6STTiYrbDOhEnqh2wqP5xQ6iYAZlTAjjGG-OIQpkOiLnXXLGhtc5fMXVMIn_Y8HkfW9o57JkC7tmDtivXAKt_JgA7G8Q7-k8FlPTYTepC2RuDvYvXyNomy81ToPJTsDKaWj1i8KMEaDydYqrDTzvz0rQds5XrMnATw2QGU2PX6zv2fJMdOgM"
+            alt="Dimly lit restaurant scene with blurred lights and culinary elements">
           <div class="food-hero-content">
             <span>Budget Radar Active</span>
             <h2>Find meals under <br><strong>₹150</strong></h2>
@@ -366,6 +459,10 @@
       <span class="material-symbols-outlined" aria-hidden="true">smart_toy</span>
       <span>AI</span>
     </button>
+    <button class="bottom-nav-item" type="button" data-nav="history">
+      <span class="material-symbols-outlined" aria-hidden="true">history</span>
+      <span>History</span>
+    </button>
     <button class="bottom-nav-item" type="button" data-nav="food">
       <span class="material-symbols-outlined" aria-hidden="true">restaurant</span>
       <span>Food</span>
@@ -382,6 +479,7 @@
       <div id="dialog-body"></div>
     </form>
   </dialog>
-  <script src="script.js"></script>
+  <script src="/script.js"></script>
 </body>
+
 </html>

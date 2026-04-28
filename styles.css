@@ -53,6 +53,8 @@
   --inner-shadow: rgba(15, 23, 42, 0.16);
   --category-housing-bg: #e0f7fa;
   --category-housing-color: #006064;
+  --category-shopping-bg: #f3e5f5;
+  --category-shopping-color: #6a1b9a;
   --category-food-bg: #fff3e0;
   --category-food-color: #e65100;
   --category-transport-bg: #e8eaf6;
@@ -124,6 +126,8 @@ body.dark {
   --inner-shadow: rgba(0, 0, 0, 0.35);
   --category-housing-bg: #003a42;
   --category-housing-color: #00e5ff;
+  --category-shopping-bg: #310b41;
+  --category-shopping-color: #d39cff;
   --category-food-bg: #5c2300;
   --category-food-color: #ff8a3d;
   --category-transport-bg: #1a237e;
@@ -2224,3 +2228,16 @@ input[type="range"]::-webkit-slider-thumb {
 .range-fill {
   transition: width 120ms linear;
 }
+
+input[type="range"] {
+  cursor: pointer;
+  touch-action: none; /* smoother mobile drag */
+}
+/* ===== Monthly Chart ===== */
+.monthly-chart-card { grid-column: 1 / -1; }
+.monthly-chart { display: flex; align-items: flex-end; gap: 3px; height: 140px; padding: 0 4px 0 4px; position: relative; border-bottom: 1px solid var(--border); margin: 16px 0 8px; }
+.chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; }
+.chart-bar { width: 100%; border-radius: 3px 3px 0 0; min-height: 2px; transition: height 0.4s cubic-bezier(0.4,0,0.2,1); }
+.chart-day-label { font-size: 9px; color: var(--text-secondary); white-space: nowrap; }
+.monthly-chart-legend { display: flex; gap: 16px; flex-wrap: wrap; padding: 4px 0 0; }
+

@@ -13,22 +13,18 @@ const formatMoney = (value) => currency.format(Math.max(0, Math.round(Number(val
 const numeric = (value) => Number(String(value).replace(/[^\d.]/g, "")) || 0;
 
 const defaultState = {
-  page: "home",
-  dailyLimit: 450,
-  mealBudget: 120,
-  monthlyTotal: 20000,
-  budgetIncome: 4500,
+  page: "welcome",
+  dailyLimit: 0,
+  mealBudget: 0,
+  monthlyTotal: 0,
+  budgetIncome: 0,
   tipsReviewed: [],
   categories: [
-    { id: "housing", name: "Housing", value: 1500, icon: "home", color: "var(--category-housing-color)", bg: "var(--category-housing-bg)" },
-    { id: "food", name: "Food", value: 600, icon: "restaurant", color: "var(--category-food-color)", bg: "var(--category-food-bg)" },
-    { id: "transport", name: "Transport", value: 400, icon: "commute", color: "var(--category-transport-color)", bg: "var(--category-transport-bg)" }
+    { id: "shopping", name: "Shopping", value: 0, icon: "shopping_bag", color: "var(--category-shopping-color)", bg: "var(--category-shopping-bg)" },
+    { id: "food", name: "Food", value: 0, icon: "restaurant", color: "var(--category-food-color)", bg: "var(--category-food-bg)" },
+    { id: "transport", name: "Transport", value: 0, icon: "commute", color: "var(--category-transport-color)", bg: "var(--category-transport-bg)" }
   ],
-  expenses: [
-    { id: "seed-1", amount: 2600, category: "food", note: "Meals and snacks", date: "2026-04-22T10:30:00.000Z" },
-    { id: "seed-2", amount: 1900, category: "transport", note: "Metro and rides", date: "2026-04-24T13:20:00.000Z" },
-    { id: "seed-3", amount: 1000, category: "shopping", note: "Essentials", date: "2026-04-25T17:05:00.000Z" }
-  ]
+  expenses: []
 };
 
 const restaurants = [
@@ -125,10 +121,11 @@ const els = {};
 
 applyStoredTheme();
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   cacheElements();
   bindEvents();
   updateThemeToggle();
+  await fetchExpenses();
   render();
   setPage(state.page || "home", { persist: false });
 });
@@ -194,10 +191,12 @@ function cacheElements() {
   els.remainingLabel = document.getElementById("remaining-label");
   els.allocationProgress = document.getElementById("allocation-progress");
   els.activeCategoryCount = document.getElementById("active-category-count");
+  els.dailyAlert = document.getElementById("daily-alert");
   els.saveBudget = document.getElementById("save-budget");
   els.autoDivide = document.getElementById("auto-divide");
   els.addCategoryButton = document.getElementById("add-category-button");
   els.expenseForm = document.getElementById("expense-form");
+  els.expenseCategoryOptions = document.getElementById("expense-category-options");
   els.amountInput = document.getElementById("amount-input");
   els.amountError = document.getElementById("amount-error");
   els.noteInput = document.getElementById("note-input");
@@ -206,6 +205,14 @@ function cacheElements() {
   els.usageChip = document.getElementById("usage-chip");
   els.monthlyProgress = document.getElementById("monthly-progress");
   els.dailyLimitText = document.getElementById("daily-limit-text");
+  els.welcomeForm = document.getElementById("welcome-form");
+  els.welcomeIncome = document.getElementById("welcome-income");
+  els.welcomeSpent = document.getElementById("welcome-spent");
+  els.welcomeError = document.getElementById("welcome-error");
+  els.historyIncome = document.getElementById("history-income");
+  els.historySpent = document.getElementById("history-spent");
+  els.historyRemaining = document.getElementById("history-remaining");
+  els.historyList = document.getElementById("history-list");
   els.perMealText = document.getElementById("per-meal-text");
   els.mealBudgetText = document.getElementById("meal-budget-text");
   els.breakdownList = document.getElementById("breakdown-list");
@@ -233,9 +240,15 @@ function bindEvents() {
   document.querySelector("[data-action='profile']").addEventListener("click", openProfileDialog);
   els.themeToggle.addEventListener("click", toggleTheme);
 
+  const aiBtn = document.getElementById("get-ai-insight-btn");
+  if (aiBtn) {
+    aiBtn.addEventListener("click", fetchAiInsights);
+  }
+
   els.incomeInput.addEventListener("input", () => {
     state.budgetIncome = numeric(els.incomeInput.value);
     renderBudget();
+    renderDashboard();
     saveState();
   });
 
@@ -243,6 +256,7 @@ function bindEvents() {
   els.saveBudget.addEventListener("click", saveBudgetStructure);
   els.addCategoryButton.addEventListener("click", openCategoryDialog);
   els.expenseForm.addEventListener("submit", handleExpenseSubmit);
+  els.welcomeForm?.addEventListener("submit", handleWelcomeSubmit);
 
   document.querySelectorAll("[data-edit-limit]").forEach((button) => {
     button.addEventListener("click", () => openLimitDialog(button.dataset.editLimit));
@@ -308,6 +322,8 @@ function render() {
   renderDashboard();
   renderInsights();
   renderRestaurants();
+  renderHistory();
+  renderWelcome();
 }
 
 function setPage(page, options = {}) {
@@ -353,6 +369,7 @@ function renderBudget() {
   els.activeCategoryCount.textContent = `${state.categories.length} Active`;
 
   els.categoryList.innerHTML = state.categories.map(categoryTemplate).join("");
+  renderExpenseCategoryOptions();
 
   els.categoryList.querySelectorAll("[data-category-input]").forEach((input) => {
     input.addEventListener("input", () => updateCategoryValue(input.dataset.categoryInput, numeric(input.value)));
@@ -402,7 +419,22 @@ function updateCategoryValue(id, value) {
 
   category.value = Math.max(0, value);
 
-  renderBudget();   // ✅ full re-render (stable)
+  // 🔥 Update only THIS category UI (no full re-render)
+  const range = document.querySelector(`[data-category-range="${id}"]`);
+  const input = document.querySelector(`[data-category-input="${id}"]`);
+  const fill = range?.parentElement.querySelector(".range-fill");
+
+  if (range) range.value = value;
+  if (input) input.value = value;
+
+  // update fill bar
+  const income = Math.max(1, Number(state.budgetIncome) || 1);
+  const width = Math.min((value / income) * 100, 100);
+  if (fill) fill.style.width = `${width}%`;
+
+  // 🔥 Update summary ONLY
+  updateBudgetSummary();
+
   saveState();
 }
 
@@ -418,6 +450,29 @@ function updateBudgetSummary() {
   els.allocationProgress.style.width = `${percent}%`;
 }
 
+function renderExpenseCategoryOptions() {
+  if (!els.expenseCategoryOptions) return;
+
+  const categories = [...state.categories];
+  if (!categories.some((category) => category.id === "other")) {
+    categories.push({ id: "other", name: "Other", icon: "more_horiz" });
+  }
+
+  els.expenseCategoryOptions.innerHTML = categories.map((category, index) => {
+    const icon = category.icon || "category";
+    const checked = category.id === "food" ? "checked" : "";
+    return `
+      <label>
+        <input type="radio" name="expense-category" value="${category.id}" ${checked}>
+        <span>
+          <span class="material-symbols-outlined" aria-hidden="true">${icon}</span>
+          ${escapeHtml(category.name)}
+        </span>
+      </label>
+    `;
+  }).join("");
+}
+
 function applySmartSplit() {
   const income = Math.max(0, Number(state.budgetIncome) || 0);
   if (!income) {
@@ -427,7 +482,7 @@ function applySmartSplit() {
   }
 
   const plan = [
-    ["housing", 0.45],
+    ["shopping", 0.45],
     ["food", 0.25],
     ["transport", 0.15]
   ];
@@ -452,7 +507,7 @@ function saveBudgetStructure() {
     return;
   }
 
-  state.monthlyTotal = income;
+  state.budgetIncome = income;
   renderDashboard();
   saveState();
   showToast("Budget structure saved", "check_circle");
@@ -503,7 +558,7 @@ function openCategoryDialog() {
   });
 }
 
-function handleExpenseSubmit(event) {
+async function handleExpenseSubmit(event) {
   event.preventDefault();
   const amount = numeric(els.amountInput.value);
   const note = els.noteInput.value.trim();
@@ -514,57 +569,298 @@ function handleExpenseSubmit(event) {
   }
 
   els.amountError.textContent = "";
-  state.expenses.unshift({
-    id: createId("expense"),
-    amount,
-    category: "food",
-    note: note || "Expense",
-    date: new Date().toISOString()
-  });
+  const selectedCategory = document.querySelector('input[name="expense-category"]:checked')?.value || "food";
 
-  els.amountInput.value = "";
-  els.noteInput.value = "";
-  saveState();
-  saveState();
-  renderDashboard();
-  renderInsights();
-renderBudget(); // 🔥 THIS links everything
-  renderDashboard();
-  renderInsights();
-  showToast("Expense logged", "check_circle");
+  const submitBtn = event.target.querySelector('button[type="submit"]');
+  if (submitBtn) submitBtn.disabled = true;
+
+  // Confirmation Interceptor — show in-app modal if food budget will be exceeded
+  if (selectedCategory === 'food' && state.dailyFoodLimit && state.dailyFoodLimit > 0) {
+    const todayStr = new Date().toDateString();
+    const foodSpentToday = state.expenses
+      .filter(e => e.category === 'food' && new Date(e.date).toDateString() === todayStr)
+      .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+
+    if (foodSpentToday + amount > state.dailyFoodLimit) {
+      if (submitBtn) submitBtn.disabled = false;
+      // Show in-app confirmation instead of browser dialog
+      openDialog(`
+        <div style="text-align:center; padding: 8px 0 4px;">
+          <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 48px; color: var(--warning, #f59e0b); display:block; margin-bottom: 12px;">restaurant</span>
+          <h2 style="margin-bottom: 8px;">Food Budget Alert</h2>
+          <p style="color: var(--text-secondary); margin-bottom: 8px;">Adding <strong>₹${amount}</strong> will exceed your daily food budget of <strong>₹${Math.round(state.dailyFoodLimit)}</strong>.</p>
+          <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 13px;">Do you still want to proceed?</p>
+          <div class="dialog-actions">
+            <button class="outline-button" type="button" id="food-warn-cancel">Cancel</button>
+            <button class="primary-button" type="button" id="food-warn-proceed" style="background: var(--warning, #f59e0b); border-color: var(--warning, #f59e0b); color: #000;">
+              <span class="material-symbols-outlined" aria-hidden="true">check</span>
+              Proceed Anyway
+            </button>
+          </div>
+        </div>
+      `);
+
+      document.getElementById('food-warn-cancel').addEventListener('click', () => els.dialog.close());
+      document.getElementById('food-warn-proceed').addEventListener('click', () => {
+        els.dialog.close();
+        submitExpenseToAPI(amount, selectedCategory, note, submitBtn);
+      });
+      return;
+    }
+  }
+
+  submitExpenseToAPI(amount, selectedCategory, note, submitBtn);
+}
+
+async function submitExpenseToAPI(amount, selectedCategory, note, submitBtn) {
+  if (submitBtn) submitBtn.disabled = true;
+  try {
+    const response = await fetch('http://localhost:5000/add-expense', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount, category: selectedCategory, note, dailyFoodLimit: state.dailyFoodLimit || 0 })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      await fetchExpenses();
+      els.amountInput.value = "";
+      els.noteInput.value = "";
+      renderBudget();
+      renderDashboard();
+      renderInsights();
+
+      if (data.limitExceeded) {
+        showToast("⚠️ Budget Exceeded! You've spent your food budget for today.", "error");
+      } else if (data.nearLimit) {
+        showToast("⚡ You're close to your daily food budget.", "warning");
+      } else {
+        showToast("Expense logged", "check_circle");
+      }
+    } else {
+      showToast("Failed to add expense", "error");
+    }
+  } catch (error) {
+    console.error("Error adding expense:", error);
+    showToast("Network error while adding expense", "error");
+  } finally {
+    if (submitBtn) submitBtn.disabled = false;
+  }
 }
 
 function renderDashboard() {
   const spent = totalSpent();
-  const total = Math.max(1, Number(state.monthlyTotal) || 1);
+  const total = Number(state.budgetIncome) || 0;
   const remaining = Math.max(0, total - spent);
-  const usedPercent = Math.min((spent / total) * 100, 100);
+  const usedPercent = total > 0 ? Math.min((spent / total) * 100, 100) : (spent > 0 ? 100 : 0);
 
   // 🔥 NEW: category tracking
   const categorySpend = getCategorySpendMap();
 
   // UI updates
   els.dashboardTitle.textContent = formatMoney(remaining);
-  els.incomeTotalLabel.textContent = `/ ${formatMoney(total)}`;
-  els.usageChip.textContent = `${Math.round(usedPercent)}% Used`;
-  els.monthlyProgress.style.width = `${usedPercent}%`;
+  els.incomeTotalLabel.textContent = `/ ${formatMoney(state.budgetIncome)}`;
 
-  // 🔥 Dynamic daily limit
-  const daysLeft = getDaysLeftInMonth();
-  state.dailyLimit = remaining / Math.max(1, daysLeft);
+  const rawUsedPercent = total > 0 ? (spent / total) * 100 : (spent > 0 ? 100 : 0);
+  els.usageChip.textContent = `${Math.round(rawUsedPercent)}% Used`;
+  els.monthlyProgress.style.width = `${Math.min(rawUsedPercent, 100)}%`;
 
-  // 🔥 Dynamic meal budget
-  state.mealBudget = state.dailyLimit / 3;
+  if (rawUsedPercent >= 100) {
+    els.monthlyProgress.style.backgroundColor = "var(--error)";
+    els.usageChip.style.color = "var(--error)";
+    els.usageChip.style.backgroundColor = "var(--error-soft, rgba(239, 68, 68, 0.1))";
+    els.usageChip.style.borderColor = "var(--error)";
+  } else {
+    els.monthlyProgress.style.backgroundColor = "var(--primary)";
+    els.usageChip.style.color = "var(--text-secondary)";
+    els.usageChip.style.backgroundColor = "transparent";
+    els.usageChip.style.borderColor = "var(--border)";
+  }
+
+  // 🔥 Daily limit lock logic
+  const todayStr = new Date().toDateString();
+
+  const foodCategoryForLimit = state.categories.find(c => c.id === 'food');
+  const foodAllocatedForLimit = foodCategoryForLimit ? Number(foodCategoryForLimit.value) : 0;
+
+  // Recalculate if: new day, OR dailyFoodLimit is 0/missing but food has an allocation (stale state)
+  const needsRecalc = state.lastCalculatedDate !== todayStr ||
+    (foodAllocatedForLimit > 0 && (!state.dailyFoodLimit || state.dailyFoodLimit === 0));
+
+  if (needsRecalc) {
+    const spentBeforeToday = state.expenses
+      .filter(e => new Date(e.date).toDateString() !== todayStr)
+      .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+    const remainingStartOfDay = Math.max(0, total - spentBeforeToday);
+    const daysLeft = getDaysLeftInMonth();
+
+    state.dailyLimit = remainingStartOfDay / Math.max(1, daysLeft);
+    state.mealBudget = state.dailyLimit / 3;
+
+    // 🔥 Daily food limit — split food allocation evenly across remaining days
+    const foodSpentBeforeToday = state.expenses
+      .filter(e => e.category === 'food' && new Date(e.date).toDateString() !== todayStr)
+      .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+    const foodRemainingStartOfDay = Math.max(0, foodAllocatedForLimit - foodSpentBeforeToday);
+    state.dailyFoodLimit = foodAllocatedForLimit > 0
+      ? (foodRemainingStartOfDay / Math.max(1, daysLeft))
+      : state.dailyLimit;
+
+    state.lastCalculatedDate = todayStr;
+    saveState();
+  }
 
   els.dailyLimitText.textContent = formatMoney(state.dailyLimit);
   els.perMealText.textContent = formatMoney(state.mealBudget);
   els.mealBudgetText.textContent = formatMoney(state.mealBudget);
+
+  const smartMessageCard = document.querySelector('.smart-message');
+  const smartMessageP = smartMessageCard?.querySelector('p');
+  const smartMessageIcon = smartMessageCard?.querySelector('.material-symbols-outlined');
+  const smartMessageCircle = smartMessageCard?.querySelector('.circle-icon');
+
+  if (els.dailyAlert) {
+    const foodCategory = state.categories.find(c => c.id === 'food');
+    const foodAllocated = foodCategory ? Number(foodCategory.value) : 0;
+    const foodSpent = categorySpend['food'] || 0;
+
+    const foodSpentToday = state.expenses
+      .filter(e => e.category === 'food' && new Date(e.date).toDateString() === todayStr)
+      .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+
+    let isOverspent = false;
+    let alertTitle = "";
+    let alertMsg = "";
+
+    if (state.dailyFoodLimit > 0 && foodSpentToday >= state.dailyFoodLimit) {
+      isOverspent = true;
+      alertTitle = "🍔 Daily Food Budget Used Up!";
+      alertMsg = `You already used your daily food budget of ${formatMoney(state.dailyFoodLimit)}. You've spent ${formatMoney(foodSpentToday)} on food today.`;
+
+      if (smartMessageCard && smartMessageP && smartMessageIcon) {
+        smartMessageCard.style.backgroundColor = "var(--error-soft, rgba(239, 68, 68, 0.1))";
+        smartMessageCard.style.borderColor = "var(--error)";
+        smartMessageIcon.textContent = "warning";
+        smartMessageIcon.style.color = "var(--error)";
+        if (smartMessageCircle) smartMessageCircle.style.backgroundColor = "rgba(239, 68, 68, 0.2)";
+        smartMessageP.innerHTML = `<strong>⚠️ Budget Exceeded!</strong> You've spent your food budget for today.`;
+        smartMessageP.style.color = "var(--error)";
+      }
+    } else {
+      if (foodAllocated > 0 && foodSpent > foodAllocated) {
+        isOverspent = true;
+        alertTitle = "🍔 Monthly Food Budget Exceeded!";
+        alertMsg = `You've spent ${formatMoney(foodSpent)} which is over your ${formatMoney(foodAllocated)} limit.`;
+      } else if (remaining < 0) {
+        isOverspent = true;
+        alertTitle = "Warning: Over monthly budget.";
+        alertMsg = "Try reducing your expenses.";
+      }
+
+      if (smartMessageCard && smartMessageP && smartMessageIcon) {
+        smartMessageCard.style.backgroundColor = "var(--surface)";
+        smartMessageCard.style.borderColor = "var(--border)";
+        smartMessageIcon.textContent = "smart_toy";
+        smartMessageIcon.style.color = "var(--primary)";
+        if (smartMessageCircle) smartMessageCircle.style.backgroundColor = "var(--primary-soft)";
+        smartMessageP.innerHTML = `"You can spend <strong id="meal-budget-text">${formatMoney(state.mealBudget)}</strong> per meal today"`;
+        smartMessageP.style.color = "var(--text-secondary)";
+        els.mealBudgetText = document.getElementById("meal-budget-text");
+      }
+    }
+
+    if (isOverspent) {
+      els.dailyAlert.style.display = "";
+      els.dailyAlert.querySelector('h2').textContent = alertTitle;
+      els.dailyAlert.querySelector('p').textContent = alertMsg;
+    } else {
+      els.dailyAlert.style.display = "none";
+    }
+  }
+
+  renderHistory();
+}
+
+function renderHistory() {
+  if (!els.historyIncome || !els.historySpent || !els.historyRemaining || !els.historyList) {
+    return;
+  }
+
+  const income = Math.max(0, Number(state.budgetIncome) || 0);
+  const spent = totalSpent();
+  const remaining = Math.max(0, income - spent);
+
+  els.historyIncome.textContent = formatMoney(income);
+  els.historySpent.textContent = formatMoney(spent);
+  els.historyRemaining.textContent = formatMoney(remaining);
+
+  const sortedExpenses = [...state.expenses].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  els.historyList.innerHTML = sortedExpenses.length
+    ? sortedExpenses.map((expense) => `
+      <div class="expense-row history-item">
+        <div>
+          <strong>${escapeHtml(expense.note || labelForCategory(expense.category))}</strong>
+          <span>${labelForCategory(expense.category)} · ${new Date(expense.date).toLocaleString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <strong>${formatMoney(expense.amount)}</strong>
+          <button class="icon-button" onclick="deleteExpense('${expense.id}')" aria-label="Delete expense" style="color: var(--error);">
+            <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 20px;">delete</span>
+          </button>
+        </div>
+      </div>
+    `).join("")
+    : `
+      <div class="empty-state-card card">
+        <p>No expenses logged yet. Add a transaction to see your spending history.</p>
+      </div>
+    `;
 }
 
 function getDaysLeftInMonth() {
   const today = new Date();
   const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
   return lastDay.getDate() - today.getDate() + 1;
+}
+
+function renderWelcome() {
+  if (!els.welcomeIncome || !els.welcomeSpent) {
+    return;
+  }
+  els.welcomeIncome.value = state.budgetIncome ? String(Math.round(state.budgetIncome)) : "";
+  els.welcomeSpent.value = state.expenses.length ? String(totalSpent()) : "";
+}
+
+function handleWelcomeSubmit(event) {
+  event.preventDefault();
+  const income = numeric(els.welcomeIncome.value);
+  const spent = numeric(els.welcomeSpent.value);
+
+  if (income <= 0) {
+    els.welcomeError.textContent = "Please enter your monthly budget.";
+    return;
+  }
+
+  els.welcomeError.textContent = "";
+  state.budgetIncome = income;
+  state.page = "home";
+
+  if (spent > 0) {
+    state.expenses = [
+      {
+        id: createId("expense"),
+        amount: spent,
+        category: "other",
+        note: "Already spent this month",
+        date: new Date().toISOString()
+      }
+    ];
+  }
+
+  saveState();
+  render();
+  setPage("home");
 }
 
 function openLimitDialog(type) {
@@ -639,16 +935,31 @@ function renderInsights() {
   }).join("");
 
   const spent = totalSpent();
-  const monthlyTotal = Math.max(1, state.monthlyTotal);
-  const usedPercent = (spent / monthlyTotal) * 100;
+  const income = Number(state.budgetIncome) || 0;
+  const daysLeft = getDaysLeftInMonth();
+  const today = new Date();
+  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+  const daysPassed = Math.max(1, daysInMonth - daysLeft);
+  const dailyAvg = spent / daysPassed;
+  const projectedMonthly = dailyAvg * daysInMonth;
+  const usedPercent = income > 0 ? (spent / income) * 100 : 0;
+  const projectedPercent = income > 0 ? (projectedMonthly / income) * 100 : 0;
 
-  if (usedPercent > 90) {
+  if (usedPercent >= 100) {
+    els.burnHeading.textContent = "Over Budget!";
+    els.burnSummary.innerHTML = `You've spent <strong>${formatMoney(spent)}</strong> — that's <strong>${Math.round(usedPercent)}%</strong> of your monthly budget. Reduce spending immediately.`;
+  } else if (projectedPercent > 100) {
+    els.burnHeading.textContent = "⚠️ On Track to Overspend";
+    els.burnSummary.innerHTML = `At your current rate of <strong>${formatMoney(Math.round(dailyAvg))}/day</strong>, you'll spend <strong>${formatMoney(Math.round(projectedMonthly))}</strong> this month — exceeding your budget.`;
+  } else if (usedPercent > 70) {
     els.burnHeading.textContent = "Careful pace.";
-    els.burnSummary.innerHTML = `You have used <strong>${Math.round(usedPercent)}%</strong> of your monthly budget. Tighten the next few purchases.`;
+    els.burnSummary.innerHTML = `You've used <strong>${Math.round(usedPercent)}%</strong> of your budget with ${daysLeft} days remaining. Spend <strong>${formatMoney(Math.round(dailyAvg))}/day</strong> on average.`;
   } else {
     els.burnHeading.textContent = "Looking good.";
-    els.burnSummary.innerHTML = `You are spending <strong>12% less</strong> than last week. Keep up the disciplined pacing.`;
+    els.burnSummary.innerHTML = `You've spent <strong>${formatMoney(spent)}</strong> so far. Daily average: <strong>${formatMoney(Math.round(dailyAvg))}</strong>. Projected monthly: <strong>${formatMoney(Math.round(projectedMonthly))}</strong>.`;
   }
+
+  renderMonthlyChart();
 
   els.tipList.innerHTML = tipTemplates.map(tipTemplate).join("");
   els.tipList.querySelectorAll("[data-tip]").forEach((button) => {
@@ -662,6 +973,68 @@ function renderInsights() {
       showToast("Tip marked reviewed", "task_alt");
     });
   });
+}
+
+function renderMonthlyChart() {
+  const chartEl = document.getElementById('monthly-chart');
+  const legendEl = document.getElementById('monthly-chart-legend');
+  if (!chartEl || !legendEl) return;
+
+  const today = new Date();
+  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+
+  // Build daily totals map
+  const dailyMap = {};
+  state.expenses.forEach(e => {
+    const d = new Date(e.date);
+    if (d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear()) {
+      const day = d.getDate();
+      dailyMap[day] = (dailyMap[day] || 0) + Number(e.amount);
+    }
+  });
+
+  const maxVal = Math.max(...Object.values(dailyMap), 1);
+  const income = Number(state.budgetIncome) || 0;
+  const dailyBudget = income > 0 ? income / daysInMonth : 0;
+
+  let barsHtml = '';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const val = dailyMap[d] || 0;
+    const heightPct = Math.min((val / maxVal) * 100, 100);
+    const isToday = d === today.getDate();
+    const isOver = dailyBudget > 0 && val > dailyBudget;
+    const color = isOver ? 'var(--error)' : isToday ? 'var(--primary)' : 'var(--primary-soft)';
+    const opacity = d > today.getDate() ? '0.25' : '1';
+    barsHtml += `
+      <div class="chart-bar-wrap" title="Day ${d}: ${formatMoney(val)}">
+        <div class="chart-bar" style="height:${heightPct}%;background:${color};opacity:${opacity};"></div>
+        ${isToday ? `<span class="chart-day-label" style="color:var(--primary);font-weight:700;">${d}</span>` : (d % 5 === 0 ? `<span class="chart-day-label">${d}</span>` : '<span class="chart-day-label"></span>')}
+      </div>`;
+  }
+
+  chartEl.innerHTML = barsHtml;
+
+  // Budget line marker
+  if (dailyBudget > 0 && maxVal > 0) {
+    const lineTop = 100 - Math.min((dailyBudget / maxVal) * 100, 100);
+    chartEl.style.position = 'relative';
+    const existing = chartEl.querySelector('.budget-line');
+    if (existing) existing.remove();
+    const line = document.createElement('div');
+    line.className = 'budget-line';
+    line.style.cssText = `position:absolute;left:0;right:0;top:${lineTop}%;border-top:1.5px dashed var(--primary);pointer-events:none;`;
+    chartEl.appendChild(line);
+  }
+
+  legendEl.innerHTML = `
+    <span style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-secondary);">
+      <span style="width:10px;height:10px;border-radius:2px;background:var(--primary);display:inline-block;"></span> Today
+    </span>
+    <span style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-secondary);">
+      <span style="width:10px;height:10px;border-radius:2px;background:var(--error);display:inline-block;"></span> Over daily budget
+    </span>
+    ${dailyBudget > 0 ? `<span style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-secondary);"><span style="width:10px;border-top:1.5px dashed var(--primary);display:inline-block;"></span> Daily limit</span>` : ''}
+  `;
 }
 
 function tipTemplate(tip) {
@@ -785,29 +1158,76 @@ function openRestaurantDialog(id) {
 }
 
 function openProfileDialog() {
-  const recent = state.expenses.slice(0, 5);
+  const profileName = state.profileName || 'You';
+  const profileIcon = state.profileIcon || 'person';
+  const avatarIcons = ['person', 'account_circle', 'star', 'favorite', 'bolt', 'diamond', 'rocket_launch', 'psychology', 'eco', 'local_fire_department'];
+
   openDialog(`
-    <h2>Profile Summary</h2>
-    <p>Your local app data is saved in this browser only.</p>
-    <div class="expense-row">
-      <div>
-        <strong>Monthly Spend</strong>
-        <span>${state.expenses.length} tracked transactions</span>
+    <div style="text-align:center; margin-bottom: 16px;">
+      <div id="profile-avatar-preview" style="width:72px;height:72px;border-radius:50%;background:var(--primary-soft);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;">
+        <span class="material-symbols-outlined" style="font-size:40px;color:var(--primary);">${profileIcon}</span>
       </div>
-      <strong>${formatMoney(totalSpent())}</strong>
+      <h2 style="margin-bottom: 4px;">Edit Profile</h2>
     </div>
-    <div class="expense-list">
-      ${recent.length ? recent.map((expense) => `
-        <div class="expense-row">
-          <div>
-            <strong>${escapeHtml(expense.note || labelForCategory(expense.category))}</strong>
-            <span>${labelForCategory(expense.category)}</span>
-          </div>
-          <strong>${formatMoney(expense.amount)}</strong>
-        </div>
-      `).join("") : "<p>No expenses yet.</p>"}
+
+    <label class="modal-input" style="margin-bottom:12px;">
+      <span class="eyebrow">Your Name</span>
+      <input id="profile-name-input" type="text" maxlength="24" placeholder="Your name" value="${escapeHtml(profileName)}" style="width:100%;">
+    </label>
+
+    <div style="margin-bottom: 20px;">
+      <span class="eyebrow" style="display:block;margin-bottom:8px;">Choose Icon</span>
+      <div id="profile-icon-picker" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">
+        ${avatarIcons.map(icon => `
+          <button type="button" class="icon-button profile-icon-option" data-icon="${icon}"
+            style="width:44px;height:44px;border-radius:50%;border:2px solid ${icon === profileIcon ? 'var(--primary)' : 'var(--border)'};background:${icon === profileIcon ? 'var(--primary-soft)' : 'transparent'};">
+            <span class="material-symbols-outlined" style="font-size:24px;color:${icon === profileIcon ? 'var(--primary)' : 'var(--text-secondary)'}">${icon}</span>
+          </button>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="dialog-actions">
+      <button class="outline-button" type="button" data-dialog-cancel>Cancel</button>
+      <button class="primary-button" type="button" id="save-profile-btn">
+        <span class="material-symbols-outlined" aria-hidden="true">check</span>
+        Save
+      </button>
     </div>
   `);
+
+  document.querySelector("[data-dialog-cancel]").addEventListener("click", () => els.dialog.close());
+
+  let selectedIcon = profileIcon;
+  document.getElementById('profile-icon-picker').addEventListener('click', (e) => {
+    const btn = e.target.closest('.profile-icon-option');
+    if (!btn) return;
+    selectedIcon = btn.dataset.icon;
+    document.querySelectorAll('.profile-icon-option').forEach(b => {
+      const isSelected = b.dataset.icon === selectedIcon;
+      b.style.borderColor = isSelected ? 'var(--primary)' : 'var(--border)';
+      b.style.background = isSelected ? 'var(--primary-soft)' : 'transparent';
+      b.querySelector('span').style.color = isSelected ? 'var(--primary)' : 'var(--text-secondary)';
+    });
+    document.getElementById('profile-avatar-preview').innerHTML =
+      `<span class="material-symbols-outlined" style="font-size:40px;color:var(--primary);">${selectedIcon}</span>`;
+  });
+
+  document.getElementById('save-profile-btn').addEventListener('click', () => {
+    const newName = document.getElementById('profile-name-input').value.trim() || 'You';
+    state.profileName = newName;
+    state.profileIcon = selectedIcon;
+    saveState();
+    els.dialog.close();
+    showToast('Profile updated', 'check_circle');
+    updateProfileUI();
+  });
+}
+
+function updateProfileUI() {
+  const profileIcon = state.profileIcon || 'person';
+  const profileBtn = document.querySelector("[data-action='profile'] .material-symbols-outlined");
+  if (profileBtn) profileBtn.textContent = profileIcon;
 }
 
 function openDialog(markup) {
@@ -841,7 +1261,7 @@ function spendingBreakdown() {
   const buckets = [
     { key: "food", label: "Food", value: 0 },
     { key: "transport", label: "Transport", value: 0 },
-    { key: "shopping", label: "Entertainment", value: 0 },
+    { key: "shopping", label: "Shopping", value: 0 },
     { key: "other", label: "Other", value: 0 }
   ];
 
@@ -876,7 +1296,7 @@ function clone(value) {
 
 function normalizeCategoryThemeValues(appState) {
   const themeValues = {
-    housing: { color: "var(--category-housing-color)", bg: "var(--category-housing-bg)" },
+    shopping: { color: "var(--category-shopping-color)", bg: "var(--category-shopping-bg)" },
     food: { color: "var(--category-food-color)", bg: "var(--category-food-bg)" },
     transport: { color: "var(--category-transport-color)", bg: "var(--category-transport-bg)" }
   };
@@ -951,4 +1371,92 @@ function getCategorySpendMap() {
   });
 
   return map;
+}
+
+// NEW API FUNCTIONS
+async function fetchExpenses() {
+  try {
+    const response = await fetch('http://localhost:5000/expenses');
+    if (response.ok) {
+      state.expenses = await response.json();
+      saveState();
+    }
+  } catch (error) {
+    console.error("Error fetching expenses:", error);
+    // Silent fail initially, or show a subtle message
+  }
+}
+
+async function fetchAiInsights() {
+  const resultDiv = document.getElementById("ai-insight-result");
+  const totalEl = document.getElementById("ai-total-spending");
+  const msgEl = document.getElementById("ai-smart-message");
+  const btn = document.getElementById("get-ai-insight-btn");
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="material-symbols-outlined" aria-hidden="true">hourglass_empty</span> Loading...`;
+  }
+
+  try {
+    const response = await fetch('http://localhost:5000/insights');
+    if (response.ok) {
+      const data = await response.json();
+      totalEl.textContent = formatMoney(data.total);
+      msgEl.textContent = `"${data.message}"`;
+      resultDiv.style.display = "block";
+      showToast("AI Insights generated successfully", "auto_awesome");
+    } else {
+      showToast("Failed to fetch AI insights", "error");
+    }
+  } catch (error) {
+    console.error("Error fetching insights:", error);
+    showToast("Network error while fetching AI insights", "error");
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<span class="material-symbols-outlined" aria-hidden="true">auto_awesome</span> Get AI Insight`;
+    }
+  }
+}
+
+function deleteExpense(id) {
+  openDialog(`
+    <div style="text-align:center; padding: 8px 0 4px;">
+      <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 48px; color: var(--error); display:block; margin-bottom: 12px;">delete_forever</span>
+      <h2 style="margin-bottom: 8px;">Delete Expense?</h2>
+      <p style="color: var(--text-secondary); margin-bottom: 24px;">This action cannot be undone.</p>
+      <div class="dialog-actions">
+        <button class="outline-button" type="button" data-dialog-cancel>Cancel</button>
+        <button class="primary-button" type="button" id="confirm-delete-btn" style="background: var(--error); border-color: var(--error);">
+          <span class="material-symbols-outlined" aria-hidden="true">delete</span>
+          Delete
+        </button>
+      </div>
+    </div>
+  `);
+
+  document.querySelector("[data-dialog-cancel]").addEventListener("click", () => els.dialog.close());
+
+  document.getElementById("confirm-delete-btn").addEventListener("click", async () => {
+    els.dialog.close();
+    try {
+      const response = await fetch(`http://localhost:5000/delete/${id}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        await fetchExpenses();
+        renderBudget();
+        renderDashboard();
+        renderInsights();
+        showToast("Expense deleted", "delete");
+      } else {
+        showToast("Failed to delete expense", "error");
+      }
+    } catch (error) {
+      console.error("Error deleting expense:", error);
+      showToast("Network error while deleting expense", "error");
+    }
+  });
 }
