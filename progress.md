@@ -39,3 +39,4 @@ Core Frontend Features Implemented:
   Daily budget prediction
   Overspending alerts with suggestions
   Categorization using AI
+.
