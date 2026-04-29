@@ -2240,4 +2240,3 @@ input[type="range"] {
 .chart-bar { width: 100%; border-radius: 3px 3px 0 0; min-height: 2px; transition: height 0.4s cubic-bezier(0.4,0,0.2,1); }
 .chart-day-label { font-size: 9px; color: var(--text-secondary); white-space: nowrap; }
 .monthly-chart-legend { display: flex; gap: 16px; flex-wrap: wrap; padding: 4px 0 0; }
-

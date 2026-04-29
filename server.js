@@ -11,32 +11,48 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// Initialize data file if it doesn't exist
-if (!fs.existsSync(DATA_FILE)) {
-    fs.writeFileSync(DATA_FILE, JSON.stringify({ expenses: [] }));
+function initDataFile() {
+    try {
+        if (!fs.existsSync(DATA_FILE)) {
+            fs.writeFileSync(DATA_FILE, JSON.stringify({ expenses: [] }));
+        }
+    } catch (err) {
+        console.error("Error initializing data file:", err);
+    }
 }
+initDataFile();
 
 function readData() {
-    const data = fs.readFileSync(DATA_FILE);
-    return JSON.parse(data);
+    try {
+        if (!fs.existsSync(DATA_FILE)) {
+            initDataFile();
+        }
+        const data = fs.readFileSync(DATA_FILE, 'utf8');
+        return JSON.parse(data);
+    } catch (err) {
+        console.error("Error reading data:", err);
+        return { expenses: [] };
+    }
 }
 
 function writeData(data) {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+    try {
+        fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+        return true;
+    } catch (err) {
+        console.error("Error writing data:", err);
+        return false;
+    }
 }
 
-// Generate unique ID
 function generateId() {
     return Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
 }
 
 // API Routes
-
-// GET /expenses
 app.get('/expenses', (req, res) => {
     try {
         const data = readData();
-        // Sort by newest first
         const expenses = data.expenses.sort((a, b) => new Date(b.date) - new Date(a.date));
         res.json(expenses);
     } catch (err) {
@@ -45,7 +61,6 @@ app.get('/expenses', (req, res) => {
     }
 });
 
-// POST /add-expense
 app.post('/add-expense', (req, res) => {
     try {
         const { amount, category, date, note, dailyFoodLimit } = req.body;
@@ -86,7 +101,10 @@ app.post('/add-expense', (req, res) => {
         }
 
         data.expenses.push(newExpense);
-        writeData(data);
+        
+        if (!writeData(data)) {
+             return res.status(500).json({ error: 'Failed to save expense' });
+        }
 
         res.status(201).json({
             success: true,
@@ -103,7 +121,6 @@ app.post('/add-expense', (req, res) => {
     }
 });
 
-// DELETE /delete/:id
 app.delete('/delete/:id', (req, res) => {
     try {
         const data = readData();
@@ -114,7 +131,9 @@ app.delete('/delete/:id', (req, res) => {
             return res.status(404).json({ error: 'Expense not found' });
         }
 
-        writeData(data);
+        if (!writeData(data)) {
+            return res.status(500).json({ error: 'Failed to delete expense' });
+        }
         res.json({ message: 'Expense deleted successfully' });
     } catch (err) {
         console.error(err);
@@ -122,7 +141,6 @@ app.delete('/delete/:id', (req, res) => {
     }
 });
 
-// GET /insights
 app.get('/insights', (req, res) => {
     try {
         const data = readData();

@@ -59,9 +59,10 @@
         <span class="material-symbols-outlined theme-toggle-icon" aria-hidden="true">dark_mode</span>
         <span class="theme-toggle-text">Dark</span>
       </button>
-      <button class="profile-button" type="button" data-action="profile" aria-label="Open profile summary">
-        <span class="profile-initials" aria-hidden="true">UP</span>
-        <span class="material-symbols-outlined profile-fallback" aria-hidden="true">person</span>
+      <button class="profile-button" type="button" data-action="profile" aria-label="Open profile summary"
+        style="display: flex; align-items: center; justify-content: center;">
+        <span class="profile-initials" aria-hidden="true" style="display: inline-block;">UP</span>
+        <span class="material-symbols-outlined profile-fallback" aria-hidden="true" style="display: none;">person</span>
       </button>
     </div>
   </header>
@@ -76,6 +77,14 @@
       <div class="welcome-card card">
         <form id="welcome-form" class="welcome-form" novalidate>
           <div class="form-row">
+            <label class="eyebrow" for="welcome-name">Your Name</label>
+            <div class="currency-input" style="margin-top: 8px;">
+              <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 20px;">person</span>
+              <input id="welcome-name" type="text" placeholder="e.g. John Doe" autocomplete="off">
+            </div>
+          </div>
+
+          <div class="form-row" style="margin-top: 16px;">
             <label class="eyebrow" for="welcome-income">Monthly Budget</label>
             <div class="currency-input">
               <span aria-hidden="true">₹</span>
@@ -100,7 +109,7 @@
     <section class="page dashboard-page" data-page="home" aria-labelledby="dashboard-title">
       <div class="dashboard-grid">
         <div class="primary-column">
-          <article id="daily-alert" class="alert-card">
+          <article id="daily-alert" class="alert-card" style="display: none; transition: opacity 0.3s ease;">
             <span class="material-symbols-outlined" aria-hidden="true">error</span>
             <div>
               <h2>Warning: Over budget for today.</h2>
@@ -108,11 +117,36 @@
             </div>
           </article>
 
+          <article id="smart-suggestion-card" class="card"
+            style="display: none; border-left: 4px solid var(--primary); padding: 16px;">
+            <h3 style="margin-top:0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+              <span class="material-symbols-outlined" style="color: var(--primary);">lightbulb</span>
+              Suggested meal under ₹50 near you
+            </h3>
+            <p id="smart-suggestion-text" style="margin-bottom:0; color: var(--muted); font-weight: 500;">Finding best
+              match...</p>
+          </article>
+
           <article class="smart-message card">
             <div class="circle-icon">
               <span class="material-symbols-outlined" aria-hidden="true">smart_toy</span>
             </div>
             <p>"You can spend <strong id="meal-budget-text">₹120</strong> per meal today"</p>
+          </article>
+
+          <article class="card daily-food-progress-card" style="padding: 24px;">
+            <div class="metric-title" style="margin-bottom: 16px; border-bottom: none; padding-bottom: 0;">
+              <span class="material-symbols-outlined" aria-hidden="true"
+                style="color: var(--primary);">restaurant</span>
+              <h2>Daily Food Spending</h2>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-weight: 600; font-size: 14px;">
+              <span id="daily-food-spent-label" style="color: var(--on-background);">Spent: ₹0</span>
+              <span id="daily-food-limit-label" style="color: var(--muted);">Limit: ₹0</span>
+            </div>
+            <div class="progress-track" aria-label="Daily food budget used" style="margin-top: 12px; height: 10px;">
+              <div class="progress-fill" id="daily-food-progress" style="background: var(--primary);"></div>
+            </div>
           </article>
 
           <article class="balance-card card">
@@ -427,11 +461,17 @@
           </div>
         </section>
 
-        <div class="filter-row" role="toolbar" aria-label="Restaurant filters">
+        <div class="filter-row" role="toolbar" aria-label="Restaurant filters"
+          style="overflow-x: auto; white-space: nowrap; padding-bottom: 8px;">
           <button class="filter-chip active" type="button" data-filter="nearest">
             <span class="material-symbols-outlined" aria-hidden="true">tune</span>
             Nearest
           </button>
+          <button class="filter-chip" type="button" data-filter="Whitefield">Whitefield</button>
+          <button class="filter-chip" type="button" data-filter="Marathahalli">Marathahalli</button>
+          <button class="filter-chip" type="button" data-filter="Indiranagar">Indiranagar</button>
+          <button class="filter-chip" type="button" data-filter="Electronic City">Electronic City</button>
+          <button class="filter-chip" type="button" data-filter="BTM">BTM</button>
           <button class="filter-chip" type="button" data-filter="veg">Pure Veg</button>
           <button class="filter-chip" type="button" data-filter="street">Street Food</button>
           <button class="filter-chip" type="button" data-filter="open">Open Now</button>

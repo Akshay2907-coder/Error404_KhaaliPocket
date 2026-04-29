@@ -2,6 +2,7 @@ const STORAGE_KEY = "khaalipocket-state-v1";
 const THEME_STORAGE_KEY = "khaalipocket-theme";
 const DARK_THEME_COLOR = "#0f0f0f";
 const LIGHT_THEME_COLOR = "#f5fafc";
+const BASE_URL = "http://localhost:5000";
 
 const currency = new Intl.NumberFormat("en-IN", {
   style: "currency",
@@ -18,6 +19,8 @@ const defaultState = {
   mealBudget: 0,
   monthlyTotal: 0,
   budgetIncome: 0,
+  profileName: "",
+  profileColor: "",
   tipsReviewed: [],
   categories: [
     { id: "shopping", name: "Shopping", value: 0, icon: "shopping_bag", color: "var(--category-shopping-color)", bg: "var(--category-shopping-bg)" },
@@ -28,63 +31,21 @@ const defaultState = {
 };
 
 const restaurants = [
-  {
-    id: "slice-station",
-    name: "Slice Station",
-    cuisines: "Pizza, Fast Food",
-    price: 120,
-    distance: 450,
-    distanceLabel: "450m",
-    rating: 4.2,
-    status: "Trending",
-    statusIcon: "local_fire_department",
-    tags: ["nearest", "open"],
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBIPNiE4XQw5XPcA4t1GxEp6ukJcgjlF2XOJ-r57KuGLoMlsUcM19WT-4fUNw5UTPhMx3X2TbREd8uiVdPbXj5_s4bZ4M0dmeqsC6WyPWfcHDmaTIM3w-IBBzjJME_Tl3Pe9ZF09eOiGOWHOmhPkuc--gvlz-qUkBEnkvmUTL8FYJi58qFl-duPkJbtf3i2p8dR2zyY0XPHbcnKJJtKt_Vz0qePWcOl7CrGJgZnSyiU5hhIE3_yNf2rl6MUxBUbn3VU1cVrUg3sTr8",
-    alt: "Close up of a wood fired pizza with melted cheese and fresh basil"
-  },
-  {
-    id: "noodle-ninja",
-    name: "Noodle Ninja",
-    cuisines: "Chinese, Asian Street",
-    price: 90,
-    distance: 800,
-    distanceLabel: "800m",
-    rating: 4.5,
-    status: "Top Rated",
-    statusIcon: "verified",
-    tags: ["nearest", "street", "open"],
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBjND1_5JEaNjKDFWKXKPdFu_6E_mIZRMc12qbZ0clAEKOHR0LtCqdTOPeG5DgWzkoDXJfc9jLLR88TXOZWjw84s951cWt4PJO0z1gE-P3cz6r85Ms08RAlWGO_uW7EW2VJ8UZVfznFPTmyv-WmcfS0tOZ-RCKQbtcz8TGha4y56Mf83xuJzORv5sMr7kCy3lLCjrszNFy_-Z_aIulahJk8dFBdINJv9ebRL6yWYDhVAsGPl32boewnN1SV5t3Is3_ub-QXIk3M6io",
-    alt: "Bowl of steaming asian noodles with vegetables and chopsticks"
-  },
-  {
-    id: "burger-bros",
-    name: "Burger Bros",
-    cuisines: "American, Fast Food",
-    price: 149,
-    distance: 1200,
-    distanceLabel: "1.2km",
-    rating: 4.0,
-    status: "15 min wait",
-    statusIcon: "schedule",
-    mutedStatus: true,
-    tags: ["open"],
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBqsa0a8q8XwB_PyetWswBOTJ8Xnelk2-sh2tvsjf5YaNr4TX_ydToOgcrk4N06LinEtz6lo5T88702Avdz9JVMFc453Zdm47jyE8_cKcVTN-5lNeb2RMbW4kYGsNXMIo5XsBgj6WWR99w629J2Utz4cIqCUtJZDy-914EXAcBOIEO-VOvUWsblkVBCih73B9RToyJaeSz0zRN51ey8WaLY2AAMv9Oa2uaQ2kSRtVhbbeTcEpJ9ZXHXrqImvXGZq1mAghh7r0eDb4c",
-    alt: "Juicy classic double cheeseburger with lettuce and tomato"
-  },
-  {
-    id: "veg-vault",
-    name: "Veg Vault",
-    cuisines: "Pure Veg, Thali",
-    price: 110,
-    distance: 950,
-    distanceLabel: "950m",
-    rating: 4.3,
-    status: "Pure Veg",
-    statusIcon: "eco",
-    tags: ["veg", "open"],
-    image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=900&q=80",
-    alt: "Vegetarian thali with rice, curries, roti and chutneys"
-  }
+  { id: "idli-1", name: "Idli", cuisines: "South Indian", price: 30, distance: 200, distanceLabel: "200m", rating: 4.5, status: "Hot", statusIcon: "local_fire_department", tags: ["nearest", "veg", "open", "Indiranagar", "BTM"], location: "Indiranagar", icon: "bakery_dining", bgColor: "#fef3c7", alt: "Idli" },
+  { id: "dosa-1", name: "Dosa", cuisines: "South Indian", price: 50, distance: 300, distanceLabel: "300m", rating: 4.2, status: "Popular", statusIcon: "star", tags: ["nearest", "veg", "open", "Whitefield", "Marathahalli"], location: "Whitefield", icon: "local_pizza", bgColor: "#ffedd5", alt: "Dosa" },
+  { id: "masala-dosa", name: "Masala Dosa", cuisines: "South Indian", price: 60, distance: 400, distanceLabel: "400m", rating: 4.6, status: "Trending", statusIcon: "trending_up", tags: ["veg", "open", "BTM", "Electronic City"], location: "BTM", icon: "lunch_dining", bgColor: "#fed7aa", alt: "Masala Dosa" },
+  { id: "meals", name: "Meals", cuisines: "South Indian Thali", price: 120, distance: 600, distanceLabel: "600m", rating: 4.3, status: "Filling", statusIcon: "restaurant", tags: ["veg", "open", "Indiranagar", "Marathahalli"], location: "Marathahalli", icon: "rice_bowl", bgColor: "#dcfce7", alt: "Meals" },
+  { id: "lemon-rice", name: "Lemon Rice", cuisines: "Rice Bowl", price: 40, distance: 150, distanceLabel: "150m", rating: 4.1, status: "Quick Bite", statusIcon: "bolt", tags: ["nearest", "veg", "street", "Whitefield", "BTM"], location: "Whitefield", icon: "rice_bowl", bgColor: "#fef08a", alt: "Lemon Rice" },
+  { id: "curd-rice", name: "Curd Rice", cuisines: "Comfort Food", price: 40, distance: 250, distanceLabel: "250m", rating: 4.4, status: "Cooling", statusIcon: "ac_unit", tags: ["nearest", "veg", "Indiranagar", "Electronic City"], location: "Electronic City", icon: "rice_bowl", bgColor: "#f1f5f9", alt: "Curd Rice" },
+  { id: "vada", name: "Vada", cuisines: "Snack", price: 20, distance: 100, distanceLabel: "100m", rating: 4.7, status: "Crunchy", statusIcon: "cookie", tags: ["nearest", "veg", "street", "Marathahalli", "BTM"], location: "Marathahalli", icon: "donut_small", bgColor: "#fcd34d", alt: "Vada" },
+  { id: "pongal", name: "Pongal", cuisines: "Breakfast", price: 50, distance: 350, distanceLabel: "350m", rating: 4.3, status: "Morning Special", statusIcon: "wb_twilight", tags: ["veg", "open", "Whitefield", "Indiranagar"], location: "Indiranagar", icon: "soup_kitchen", bgColor: "#fde68a", alt: "Pongal" },
+  { id: "biryani", name: "Biryani", cuisines: "Mughlai", price: 120, distance: 800, distanceLabel: "800m", rating: 4.8, status: "Must Try", statusIcon: "local_fire_department", tags: ["open", "Whitefield", "Electronic City"], location: "Electronic City", icon: "kebab_dining", bgColor: "#fecaca", alt: "Biryani" },
+  { id: "fried-rice", name: "Fried Rice", cuisines: "Indo-Chinese", price: 60, distance: 500, distanceLabel: "500m", rating: 4.2, status: "Spicy", statusIcon: "whatshot", tags: ["street", "open", "BTM", "Marathahalli"], location: "BTM", icon: "skillet", bgColor: "#ffedd5", alt: "Fried Rice" },
+  { id: "noodles", name: "Noodles", cuisines: "Chinese", price: 60, distance: 550, distanceLabel: "550m", rating: 4.1, status: "Fast Food", statusIcon: "ramen_dining", tags: ["street", "open", "Whitefield", "Indiranagar"], location: "Whitefield", icon: "ramen_dining", bgColor: "#e0e7ff", alt: "Noodles" },
+  { id: "burger", name: "Burger", cuisines: "American", price: 80, distance: 900, distanceLabel: "900m", rating: 4.0, status: "Juicy", statusIcon: "lunch_dining", tags: ["open", "Indiranagar", "Electronic City"], location: "Indiranagar", icon: "lunch_dining", bgColor: "#fee2e2", alt: "Burger" },
+  { id: "pizza", name: "Pizza", cuisines: "Italian", price: 99, distance: 1000, distanceLabel: "1km", rating: 4.5, status: "Cheesy", statusIcon: "local_pizza", tags: ["open", "Marathahalli", "Whitefield"], location: "Marathahalli", icon: "local_pizza", bgColor: "#fef08a", alt: "Pizza" },
+  { id: "sandwich", name: "Sandwich", cuisines: "Snack", price: 60, distance: 400, distanceLabel: "400m", rating: 4.3, status: "Healthy", statusIcon: "eco", tags: ["veg", "nearest", "open", "BTM", "Indiranagar"], location: "BTM", icon: "breakfast_dining", bgColor: "#dcfce7", alt: "Sandwich" },
+  { id: "parotta", name: "Parotta", cuisines: "South Indian", price: 60, distance: 450, distanceLabel: "450m", rating: 4.6, status: "Flaky", statusIcon: "bakery_dining", tags: ["street", "open", "Electronic City", "Marathahalli"], location: "Electronic City", icon: "bakery_dining", bgColor: "#f3e8ff", alt: "Parotta" }
 ];
 
 const tipTemplates = [
@@ -116,6 +77,7 @@ const tipTemplates = [
 
 let state = loadState();
 let activeFilter = "nearest";
+let isOffline = false;
 
 const els = {};
 
@@ -125,9 +87,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   cacheElements();
   bindEvents();
   updateThemeToggle();
+  updateProfileUI();
   await fetchExpenses();
-  render();
-  setPage(state.page || "home", { persist: false });
+  
+  if (state.budgetIncome === 0) {
+    setPage("welcome", { persist: false });
+  } else {
+    render();
+    setPage(state.page || "home", { persist: false });
+  }
 });
 
 function applyStoredTheme() {
@@ -206,6 +174,7 @@ function cacheElements() {
   els.monthlyProgress = document.getElementById("monthly-progress");
   els.dailyLimitText = document.getElementById("daily-limit-text");
   els.welcomeForm = document.getElementById("welcome-form");
+  els.welcomeName = document.getElementById("welcome-name");
   els.welcomeIncome = document.getElementById("welcome-income");
   els.welcomeSpent = document.getElementById("welcome-spent");
   els.welcomeError = document.getElementById("welcome-error");
@@ -419,7 +388,6 @@ function updateCategoryValue(id, value) {
 
   category.value = Math.max(0, value);
 
-  // 🔥 Update only THIS category UI (no full re-render)
   const range = document.querySelector(`[data-category-range="${id}"]`);
   const input = document.querySelector(`[data-category-input="${id}"]`);
   const fill = range?.parentElement.querySelector(".range-fill");
@@ -427,14 +395,11 @@ function updateCategoryValue(id, value) {
   if (range) range.value = value;
   if (input) input.value = value;
 
-  // update fill bar
   const income = Math.max(1, Number(state.budgetIncome) || 1);
   const width = Math.min((value / income) * 100, 100);
   if (fill) fill.style.width = `${width}%`;
 
-  // 🔥 Update summary ONLY
   updateBudgetSummary();
-
   saveState();
 }
 
@@ -572,9 +537,7 @@ async function handleExpenseSubmit(event) {
   const selectedCategory = document.querySelector('input[name="expense-category"]:checked')?.value || "food";
 
   const submitBtn = event.target.querySelector('button[type="submit"]');
-  if (submitBtn) submitBtn.disabled = true;
 
-  // Confirmation Interceptor — show in-app modal if food budget will be exceeded
   if (selectedCategory === 'food' && state.dailyFoodLimit && state.dailyFoodLimit > 0) {
     const todayStr = new Date().toDateString();
     const foodSpentToday = state.expenses
@@ -582,8 +545,6 @@ async function handleExpenseSubmit(event) {
       .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 
     if (foodSpentToday + amount > state.dailyFoodLimit) {
-      if (submitBtn) submitBtn.disabled = false;
-      // Show in-app confirmation instead of browser dialog
       openDialog(`
         <div style="text-align:center; padding: 8px 0 4px;">
           <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 48px; color: var(--warning, #f59e0b); display:block; margin-bottom: 12px;">restaurant</span>
@@ -613,9 +574,21 @@ async function handleExpenseSubmit(event) {
 }
 
 async function submitExpenseToAPI(amount, selectedCategory, note, submitBtn) {
-  if (submitBtn) submitBtn.disabled = true;
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="material-symbols-outlined" aria-hidden="true">hourglass_empty</span> Saving...';
+  }
+  
+  const newExpense = {
+    id: createId("expense"),
+    amount: Number(amount),
+    category: selectedCategory,
+    note: note || '',
+    date: new Date().toISOString()
+  };
+
   try {
-    const response = await fetch('http://localhost:5000/add-expense', {
+    const response = await fetch(`${BASE_URL}/add-expense`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ amount, category: selectedCategory, note, dailyFoodLimit: state.dailyFoodLimit || 0 })
@@ -623,7 +596,8 @@ async function submitExpenseToAPI(amount, selectedCategory, note, submitBtn) {
 
     if (response.ok) {
       const data = await response.json();
-      await fetchExpenses();
+      state.expenses.unshift(data.expense);
+      saveState();
       els.amountInput.value = "";
       els.noteInput.value = "";
       renderBudget();
@@ -638,13 +612,39 @@ async function submitExpenseToAPI(amount, selectedCategory, note, submitBtn) {
         showToast("Expense logged", "check_circle");
       }
     } else {
-      showToast("Failed to add expense", "error");
+        throw new Error("Failed to add expense");
     }
   } catch (error) {
     console.error("Error adding expense:", error);
-    showToast("Network error while adding expense", "error");
+    state.expenses.unshift(newExpense);
+    saveState();
+    els.amountInput.value = "";
+    els.noteInput.value = "";
+    renderBudget();
+    renderDashboard();
+    renderInsights();
+    
+    if (selectedCategory === 'food') {
+       const todayStr = new Date().toDateString();
+       const foodSpentToday = state.expenses
+         .filter(e => e.category === 'food' && new Date(e.date).toDateString() === todayStr)
+         .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+       
+       if (state.dailyFoodLimit > 0 && foodSpentToday > state.dailyFoodLimit) {
+           showToast("⚠️ Budget Exceeded! You've spent your food budget for today.", "error");
+       } else if (state.dailyFoodLimit > 0 && foodSpentToday >= state.dailyFoodLimit * 0.8) {
+           showToast("⚡ You're close to your daily food budget.", "warning");
+       } else {
+           showToast("Offline mode: Expense saved locally", "wifi_off");
+       }
+    } else {
+       showToast("Offline mode: Expense saved locally", "wifi_off");
+    }
   } finally {
-    if (submitBtn) submitBtn.disabled = false;
+    if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span class="material-symbols-outlined" aria-hidden="true">add_task</span> Add Expense';
+    }
   }
 }
 
@@ -654,10 +654,8 @@ function renderDashboard() {
   const remaining = Math.max(0, total - spent);
   const usedPercent = total > 0 ? Math.min((spent / total) * 100, 100) : (spent > 0 ? 100 : 0);
 
-  // 🔥 NEW: category tracking
   const categorySpend = getCategorySpendMap();
 
-  // UI updates
   els.dashboardTitle.textContent = formatMoney(remaining);
   els.incomeTotalLabel.textContent = `/ ${formatMoney(state.budgetIncome)}`;
 
@@ -677,13 +675,14 @@ function renderDashboard() {
     els.usageChip.style.borderColor = "var(--border)";
   }
 
-  // 🔥 Daily limit lock logic
   const todayStr = new Date().toDateString();
+  const totalSpentToday = state.expenses
+      .filter(e => new Date(e.date).toDateString() === todayStr)
+      .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 
   const foodCategoryForLimit = state.categories.find(c => c.id === 'food');
   const foodAllocatedForLimit = foodCategoryForLimit ? Number(foodCategoryForLimit.value) : 0;
 
-  // Recalculate if: new day, OR dailyFoodLimit is 0/missing but food has an allocation (stale state)
   const needsRecalc = state.lastCalculatedDate !== todayStr ||
     (foodAllocatedForLimit > 0 && (!state.dailyFoodLimit || state.dailyFoodLimit === 0));
 
@@ -697,7 +696,6 @@ function renderDashboard() {
     state.dailyLimit = remainingStartOfDay / Math.max(1, daysLeft);
     state.mealBudget = state.dailyLimit / 3;
 
-    // 🔥 Daily food limit — split food allocation evenly across remaining days
     const foodSpentBeforeToday = state.expenses
       .filter(e => e.category === 'food' && new Date(e.date).toDateString() !== todayStr)
       .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
@@ -727,16 +725,43 @@ function renderDashboard() {
     const foodSpentToday = state.expenses
       .filter(e => e.category === 'food' && new Date(e.date).toDateString() === todayStr)
       .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+      
+    // Update Daily Food Progress Bar
+    const foodProgressFill = document.getElementById("daily-food-progress");
+    const foodSpentLabel = document.getElementById("daily-food-spent-label");
+    const foodLimitLabel = document.getElementById("daily-food-limit-label");
+    if (foodProgressFill && foodSpentLabel && foodLimitLabel) {
+       foodSpentLabel.textContent = `Spent: ${formatMoney(foodSpentToday)}`;
+       foodLimitLabel.textContent = `Limit: ${formatMoney(state.dailyFoodLimit)}`;
+       let pct = state.dailyFoodLimit > 0 ? (foodSpentToday / state.dailyFoodLimit) * 100 : 0;
+       foodProgressFill.style.width = `${Math.min(pct, 100)}%`;
+       if (pct < 70) foodProgressFill.style.background = "#22c55e"; // Green
+       else if (pct <= 100) foodProgressFill.style.background = "#f59e0b"; // Orange
+       else foodProgressFill.style.background = "#ef4444"; // Red
+    }
 
     let isOverspent = false;
     let alertTitle = "";
     let alertMsg = "";
+    let isWarning = false;
 
-    if (state.dailyFoodLimit > 0 && foodSpentToday >= state.dailyFoodLimit) {
+    if (state.dailyLimit > 0 && totalSpentToday >= state.dailyLimit) {
       isOverspent = true;
-      alertTitle = "🍔 Daily Food Budget Used Up!";
-      alertMsg = `You already used your daily food budget of ${formatMoney(state.dailyFoodLimit)}. You've spent ${formatMoney(foodSpentToday)} on food today.`;
-
+      alertTitle = "🚨 Daily Spend Limit Exceeded!";
+      alertMsg = `You've spent ${formatMoney(totalSpentToday)} today, exceeding your total daily limit of ${formatMoney(state.dailyLimit)}.`;
+      if (smartMessageCard && smartMessageP && smartMessageIcon) {
+        smartMessageCard.style.backgroundColor = "var(--error-soft, rgba(239, 68, 68, 0.1))";
+        smartMessageCard.style.borderColor = "var(--error)";
+        smartMessageIcon.textContent = "warning";
+        smartMessageIcon.style.color = "var(--error)";
+        if (smartMessageCircle) smartMessageCircle.style.backgroundColor = "rgba(239, 68, 68, 0.2)";
+        smartMessageP.innerHTML = `<strong>⚠️ Limit Exceeded!</strong> You've spent more than your daily limit.`;
+        smartMessageP.style.color = "var(--error)";
+      }
+    } else if (state.dailyFoodLimit > 0 && foodSpentToday >= state.dailyFoodLimit) {
+      isOverspent = true;
+      alertTitle = "🍔 Daily Food Budget Exceeded!";
+      alertMsg = `You exceeded your daily food budget of ${formatMoney(state.dailyFoodLimit)}. You've spent ${formatMoney(foodSpentToday)} on food today.`;
       if (smartMessageCard && smartMessageP && smartMessageIcon) {
         smartMessageCard.style.backgroundColor = "var(--error-soft, rgba(239, 68, 68, 0.1))";
         smartMessageCard.style.borderColor = "var(--error)";
@@ -745,6 +770,32 @@ function renderDashboard() {
         if (smartMessageCircle) smartMessageCircle.style.backgroundColor = "rgba(239, 68, 68, 0.2)";
         smartMessageP.innerHTML = `<strong>⚠️ Budget Exceeded!</strong> You've spent your food budget for today.`;
         smartMessageP.style.color = "var(--error)";
+      }
+    } else if (state.dailyLimit > 0 && totalSpentToday >= state.dailyLimit * 0.8) {
+       isWarning = true;
+       alertTitle = "⚠️ Close to Daily Limit";
+       alertMsg = `You've spent ${formatMoney(totalSpentToday)} today, close to your daily limit of ${formatMoney(state.dailyLimit)}.`;
+       if (smartMessageCard && smartMessageP && smartMessageIcon) {
+        smartMessageCard.style.backgroundColor = "var(--surface)";
+        smartMessageCard.style.borderColor = "var(--border)";
+        smartMessageIcon.textContent = "warning";
+        smartMessageIcon.style.color = "#f59e0b";
+        if (smartMessageCircle) smartMessageCircle.style.backgroundColor = "rgba(245, 158, 11, 0.2)";
+        smartMessageP.innerHTML = `You are very close to your daily limit. Watch your spending.`;
+        smartMessageP.style.color = "#f59e0b";
+      }
+    } else if (state.dailyFoodLimit > 0 && foodSpentToday >= state.dailyFoodLimit * 0.8) {
+       isWarning = true;
+       alertTitle = "⚠️ Close to Food Limit";
+       alertMsg = `You're close to your daily food limit of ${formatMoney(state.dailyFoodLimit)}.`;
+       if (smartMessageCard && smartMessageP && smartMessageIcon) {
+        smartMessageCard.style.backgroundColor = "var(--surface)";
+        smartMessageCard.style.borderColor = "var(--border)";
+        smartMessageIcon.textContent = "warning";
+        smartMessageIcon.style.color = "#f59e0b";
+        if (smartMessageCircle) smartMessageCircle.style.backgroundColor = "rgba(245, 158, 11, 0.2)";
+        smartMessageP.innerHTML = `You are very close to your food limit. Watch your spending.`;
+        smartMessageP.style.color = "#f59e0b";
       }
     } else {
       if (foodAllocated > 0 && foodSpent > foodAllocated) {
@@ -769,12 +820,35 @@ function renderDashboard() {
       }
     }
 
-    if (isOverspent) {
-      els.dailyAlert.style.display = "";
+    if (isOverspent || isWarning) {
+      els.dailyAlert.style.display = "flex";
       els.dailyAlert.querySelector('h2').textContent = alertTitle;
       els.dailyAlert.querySelector('p').textContent = alertMsg;
+      if(isWarning) {
+          els.dailyAlert.style.borderLeftColor = "#f59e0b";
+          els.dailyAlert.style.color = "#f59e0b";
+          els.dailyAlert.style.background = "rgba(245, 158, 11, 0.1)";
+      } else {
+          els.dailyAlert.style.borderLeftColor = "var(--error)";
+          els.dailyAlert.style.color = "var(--error)";
+          els.dailyAlert.style.background = "var(--error-bg)";
+      }
     } else {
       els.dailyAlert.style.display = "none";
+    }
+    
+    // Smart suggestions block
+    const suggestionCard = document.getElementById("smart-suggestion-card");
+    const suggestionText = document.getElementById("smart-suggestion-text");
+    if (suggestionCard && suggestionText) {
+       const affordable = restaurants.filter(r => r.price <= 50);
+       if(affordable.length > 0) {
+           const pick = affordable[Math.floor(Math.random() * affordable.length)];
+           suggestionText.innerHTML = `Try <strong>${pick.name}</strong> from ${pick.location} for just ${formatMoney(pick.price)}.`;
+           suggestionCard.style.display = "block";
+       } else {
+           suggestionCard.style.display = "none";
+       }
     }
   }
 
@@ -812,8 +886,10 @@ function renderHistory() {
       </div>
     `).join("")
     : `
-      <div class="empty-state-card card">
-        <p>No expenses logged yet. Add a transaction to see your spending history.</p>
+      <div class="empty-state-card card" style="text-align: center; padding: 32px;">
+        <span class="material-symbols-outlined" style="font-size: 48px; color: var(--muted); margin-bottom: 16px; display: block;">receipt_long</span>
+        <h3 style="margin-bottom: 8px;">No expenses yet</h3>
+        <p style="color: var(--muted);">Start tracking to save money and gain insights.</p>
       </div>
     `;
 }
@@ -828,6 +904,7 @@ function renderWelcome() {
   if (!els.welcomeIncome || !els.welcomeSpent) {
     return;
   }
+  if (els.welcomeName) els.welcomeName.value = state.profileName || "";
   els.welcomeIncome.value = state.budgetIncome ? String(Math.round(state.budgetIncome)) : "";
   els.welcomeSpent.value = state.expenses.length ? String(totalSpent()) : "";
 }
@@ -836,6 +913,7 @@ function handleWelcomeSubmit(event) {
   event.preventDefault();
   const income = numeric(els.welcomeIncome.value);
   const spent = numeric(els.welcomeSpent.value);
+  const name = els.welcomeName ? els.welcomeName.value.trim() : "";
 
   if (income <= 0) {
     els.welcomeError.textContent = "Please enter your monthly budget.";
@@ -844,9 +922,11 @@ function handleWelcomeSubmit(event) {
 
   els.welcomeError.textContent = "";
   state.budgetIncome = income;
+  state.profileName = name || "You";
+  if (!state.profileColor) state.profileColor = getRandomColor();
   state.page = "home";
 
-  if (spent > 0) {
+  if (spent > 0 && state.expenses.length === 0) {
     state.expenses = [
       {
         id: createId("expense"),
@@ -859,6 +939,7 @@ function handleWelcomeSubmit(event) {
   }
 
   saveState();
+  updateProfileUI();
   render();
   setPage("home");
 }
@@ -983,7 +1064,6 @@ function renderMonthlyChart() {
   const today = new Date();
   const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
 
-  // Build daily totals map
   const dailyMap = {};
   state.expenses.forEach(e => {
     const d = new Date(e.date);
@@ -1014,7 +1094,6 @@ function renderMonthlyChart() {
 
   chartEl.innerHTML = barsHtml;
 
-  // Budget line marker
   if (dailyBudget > 0 && maxVal > 0) {
     const lineTop = 100 - Math.min((dailyBudget / maxVal) * 100, 100);
     chartEl.style.position = 'relative';
@@ -1067,7 +1146,7 @@ function renderRestaurants() {
   });
 
   const filtered = restaurants
-    .filter((restaurant) => activeFilter === "nearest" || restaurant.tags.includes(activeFilter))
+    .filter((restaurant) => activeFilter === "nearest" || restaurant.tags.includes(activeFilter) || restaurant.location === activeFilter)
     .sort((a, b) => activeFilter === "nearest" ? a.distance - b.distance : a.price - b.price);
 
   els.restaurantGrid.innerHTML = filtered.map(restaurantTemplate).join("");
@@ -1083,10 +1162,16 @@ function renderRestaurants() {
 }
 
 function restaurantTemplate(restaurant) {
+  const mediaContent = restaurant.icon 
+    ? `<div style="width: 100%; height: 160px; background-color: ${restaurant.bgColor}; display: flex; align-items: center; justify-content: center; border-radius: 12px 12px 0 0;">
+         <span class="material-symbols-outlined" style="font-size: 72px; color: rgba(0,0,0,0.5);">${restaurant.icon}</span>
+       </div>`
+    : `<img src="${restaurant.image}" alt="${escapeHtml(restaurant.alt)}" loading="lazy">`;
+
   return `
     <article class="restaurant-card" tabindex="0" role="button" data-restaurant="${restaurant.id}" aria-label="Open ${escapeHtml(restaurant.name)} details">
       <div class="restaurant-media">
-        <img src="${restaurant.image}" alt="${escapeHtml(restaurant.alt)}" loading="lazy">
+        ${mediaContent}
         <div class="price-badge">${formatMoney(restaurant.price)} <span>avg</span></div>
         <div class="distance-badge">
           <span class="material-symbols-outlined" aria-hidden="true">location_on</span>
@@ -1153,8 +1238,20 @@ function openRestaurantDialog(id) {
     renderDashboard();
     renderInsights();
     els.dialog.close();
-    showToast(`${restaurant.name} logged`, "restaurant");
+    showToast(`${restaurant.name} logged locally`, "restaurant");
   });
+}
+
+function getInitials(name) {
+  if (!name) return "UP";
+  const parts = name.trim().split(" ");
+  if (parts.length > 1) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+}
+
+function getRandomColor() {
+   const colors = ['#006876', '#8d4f00', '#283593', '#ba1a1a', '#006064', '#6a1b9a', '#e65100'];
+   return colors[Math.floor(Math.random() * colors.length)];
 }
 
 function openProfileDialog() {
@@ -1217,6 +1314,7 @@ function openProfileDialog() {
     const newName = document.getElementById('profile-name-input').value.trim() || 'You';
     state.profileName = newName;
     state.profileIcon = selectedIcon;
+    if(!state.profileColor) state.profileColor = getRandomColor();
     saveState();
     els.dialog.close();
     showToast('Profile updated', 'check_circle');
@@ -1227,7 +1325,25 @@ function openProfileDialog() {
 function updateProfileUI() {
   const profileIcon = state.profileIcon || 'person';
   const profileBtn = document.querySelector("[data-action='profile'] .material-symbols-outlined");
-  if (profileBtn) profileBtn.textContent = profileIcon;
+  const profileInitials = document.querySelector(".profile-initials");
+  const profileButtonWrapper = document.querySelector(".profile-button");
+  
+  if(state.profileName && profileInitials) {
+      if(profileBtn) profileBtn.style.display = "none";
+      profileInitials.textContent = getInitials(state.profileName);
+      profileInitials.style.display = "inline-block";
+      if(state.profileColor) {
+         profileButtonWrapper.style.backgroundColor = state.profileColor;
+         profileButtonWrapper.style.color = "#ffffff";
+         profileButtonWrapper.style.border = "none";
+      }
+  } else {
+      if(profileBtn) {
+         profileBtn.textContent = profileIcon;
+         profileBtn.style.display = "inline-block";
+      }
+      if(profileInitials) profileInitials.style.display = "none";
+  }
 }
 
 function openDialog(markup) {
@@ -1344,47 +1460,70 @@ function escapeHtml(value) {
   })[char]);
 }
 
-let typingTimer;
-
-input.addEventListener("input", () => {
-  clearTimeout(typingTimer);
-  typingTimer = setTimeout(() => {
-    updateCategoryValue(id, numeric(input.value));
-  }, 120);
-});
-
 function getCategorySpendMap() {
   const map = {};
-
   state.expenses.forEach(exp => {
     map[exp.category] = (map[exp.category] || 0) + exp.amount;
   });
-
   return map;
 }
 
-function getCategorySpendMap() {
-  const map = {};
-
-  state.expenses.forEach(exp => {
-    map[exp.category] = (map[exp.category] || 0) + exp.amount;
-  });
-
-  return map;
-}
-
-// NEW API FUNCTIONS
 async function fetchExpenses() {
   try {
-    const response = await fetch('http://localhost:5000/expenses');
+    const response = await fetch(`${BASE_URL}/expenses`);
     if (response.ok) {
-      state.expenses = await response.json();
-      saveState();
+      const serverExpenses = await response.json();
+      if (serverExpenses.length >= state.expenses.length || state.expenses.length === 0) {
+          state.expenses = serverExpenses;
+          saveState();
+      }
+      if(isOffline) {
+          isOffline = false;
+          showToast("Reconnected to server", "wifi");
+      }
+    } else {
+        throw new Error("Failed to load");
     }
   } catch (error) {
     console.error("Error fetching expenses:", error);
-    // Silent fail initially, or show a subtle message
+    if(!isOffline) {
+        showToast("Offline mode active. Using local storage.", "wifi_off");
+        isOffline = true;
+    }
   }
+}
+
+function getSmartInsights() {
+  const foodSpend = getCategorySpendMap()['food'] || 0;
+  const total = totalSpent();
+  const income = Number(state.budgetIncome) || 0;
+  
+  let insights = [];
+  
+  if (total > 0) {
+    const foodPercent = Math.round((foodSpend / total) * 100);
+    insights.push(`You spent ${foodPercent}% on food this month.`);
+    
+    if (foodPercent > 35) {
+       insights.push(`You can save around ₹${Math.round(foodSpend * 0.2)}/month by reducing outside food by 20%.`);
+    } else {
+       insights.push("Great job keeping your food spending in check!");
+    }
+  } else {
+      insights.push("Add some expenses to get tailored AI insights.");
+  }
+  
+  const daysLeft = getDaysLeftInMonth();
+  if (income > 0) {
+     const remaining = income - total;
+     if (remaining > 0) {
+        insights.push(`You have ₹${remaining} left to safely spend over the next ${daysLeft} days.`);
+     } else {
+        insights.push(`You are over budget by ₹${Math.abs(remaining)}. Limit all non-essential spending.`);
+     }
+  }
+  
+  return insights;
 }
 
 async function fetchAiInsights() {
@@ -1395,23 +1534,15 @@ async function fetchAiInsights() {
 
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = `<span class="material-symbols-outlined" aria-hidden="true">hourglass_empty</span> Loading...`;
+    btn.innerHTML = `<span class="material-symbols-outlined" aria-hidden="true">hourglass_empty</span> Analyzing...`;
   }
 
   try {
-    const response = await fetch('http://localhost:5000/insights');
-    if (response.ok) {
-      const data = await response.json();
-      totalEl.textContent = formatMoney(data.total);
-      msgEl.textContent = `"${data.message}"`;
-      resultDiv.style.display = "block";
-      showToast("AI Insights generated successfully", "auto_awesome");
-    } else {
-      showToast("Failed to fetch AI insights", "error");
-    }
-  } catch (error) {
-    console.error("Error fetching insights:", error);
-    showToast("Network error while fetching AI insights", "error");
+    const insights = getSmartInsights();
+    totalEl.textContent = formatMoney(totalSpent());
+    msgEl.innerHTML = insights.map(i => `<div style="margin-bottom: 8px;">• ${i}</div>`).join('');
+    resultDiv.style.display = "block";
+    showToast("Smart Insights generated", "auto_awesome");
   } finally {
     if (btn) {
       btn.disabled = false;
@@ -1441,22 +1572,28 @@ function deleteExpense(id) {
   document.getElementById("confirm-delete-btn").addEventListener("click", async () => {
     els.dialog.close();
     try {
-      const response = await fetch(`http://localhost:5000/delete/${id}`, {
+      const response = await fetch(`${BASE_URL}/delete/${id}`, {
         method: 'DELETE'
       });
 
       if (response.ok) {
-        await fetchExpenses();
+        state.expenses = state.expenses.filter(e => e.id !== id);
+        saveState();
         renderBudget();
         renderDashboard();
         renderInsights();
         showToast("Expense deleted", "delete");
       } else {
-        showToast("Failed to delete expense", "error");
+        throw new Error("Failed to delete via API");
       }
     } catch (error) {
       console.error("Error deleting expense:", error);
-      showToast("Network error while deleting expense", "error");
+      state.expenses = state.expenses.filter(e => e.id !== id);
+      saveState();
+      renderBudget();
+      renderDashboard();
+      renderInsights();
+      showToast("Offline: Expense removed locally", "delete");
     }
   });
 }
